@@ -5,7 +5,10 @@ spring:
     banner-mode: "console"
 
 
-
+camel:
+  servlet:
+    mapping:
+      context-path: /api/*
 
 management:
   endpoint:

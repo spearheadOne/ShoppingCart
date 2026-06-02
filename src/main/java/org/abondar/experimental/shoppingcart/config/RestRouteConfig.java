@@ -7,17 +7,15 @@ import org.springframework.stereotype.Component;
 @Component
 public class RestRouteConfig extends RouteBuilder {
 
-  @Override
-  public void configure() {
+    @Override
+    public void configure() {
 
-    restConfiguration()
-        .host("localhost")
-        .port(8080)
-        .enableCORS(true)
-        .apiContextPath("/doc")
-        .apiProperty("api.title", "Shopping Cart backend")
-        .apiProperty("api.version", "v1")
-        .component("servlet")
-        .bindingMode(RestBindingMode.auto);
-  }
+        restConfiguration()
+                .enableCORS(true)
+                .contextPath("/api")
+                .apiProperty("api.title", "Shopping Cart backend")
+                .apiProperty("api.version", "v1")
+                .component("servlet")
+                .bindingMode(RestBindingMode.auto);
+    }
 }

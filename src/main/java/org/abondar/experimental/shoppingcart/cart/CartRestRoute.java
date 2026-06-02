@@ -9,7 +9,7 @@ public class CartRestRoute extends RouteBuilder {
     public void configure() throws Exception {
 
         rest()
-                .path("/api/carts")
+                .path("/v1/carts")
                 .consumes("application/json")
                 .produces("application/json")
 

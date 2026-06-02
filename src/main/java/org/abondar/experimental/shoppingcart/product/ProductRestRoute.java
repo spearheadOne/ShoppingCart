@@ -9,7 +9,7 @@ public class ProductRestRoute extends RouteBuilder {
     @Override
     public void configure() {
         rest()
-                .path("/api/products")
+                .path("/v1/products")
                 .consumes("application/json")
                 .produces("application/json")
 
