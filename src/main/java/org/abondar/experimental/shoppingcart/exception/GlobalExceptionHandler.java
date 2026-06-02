@@ -1,0 +1,49 @@
+package org.abondar.experimental.shoppingcart.exception;
+
+import com.fasterxml.jackson.core.JsonParseException;
+import jakarta.validation.ConstraintViolationException;
+import org.apache.camel.Exchange;
+import org.apache.camel.builder.RouteBuilder;
+import org.springframework.stereotype.Component;
+
+@Component
+public class GlobalExceptionHandler extends RouteBuilder {
+    @Override
+    public void configure() throws Exception {
+        //TODO add custom exceptios
+//        onException(ProductNotFoundException.class)
+//
+//                .handled(true)
+//                .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(404))
+//                .setHeader(Exchange.CONTENT_TYPE, constant("application/json"))
+//.setBody(exchange -> new ErrorResponse("PRODUCT_NOT_FOUND", exchange.getProperty(Exchange.EXCEPTION_CAUGHT, Exception.class).getMessage()))
+//
+//        onException(CartNotFoundException.class)
+//
+//                .handled(true)
+//                .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(404))
+//                .setHeader(Exchange.CONTENT_TYPE, constant("application/json"))
+//                .setBody(simple("{\"message\":\"${exception.message}\"}"));
+
+        onException(ConstraintViolationException.class)
+                .handled(true)
+                .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(400))
+                .setHeader(Exchange.CONTENT_TYPE, constant("application/json"))
+                .setBody(exchange -> new ErrorResponse("VALIDATION_ERROR",
+                        exchange.getProperty(Exchange.EXCEPTION_CAUGHT, Exception.class).getMessage()));
+
+        onException(JsonParseException.class)
+                .handled(true)
+                .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(400))
+                .setHeader(Exchange.CONTENT_TYPE, constant("application/json"))
+                .setBody(exchange -> new ErrorResponse("INVALID_JSON",
+                exchange.getProperty(Exchange.EXCEPTION_CAUGHT, Exception.class).getMessage()));
+
+        onException(Exception.class)
+                .handled(true)
+                .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(500))
+                .setHeader(Exchange.CONTENT_TYPE, constant("application/json"))
+                .setBody(exchange -> new ErrorResponse("INTERNAL_ERROR",
+                        "Internal server error"));
+    }
+}

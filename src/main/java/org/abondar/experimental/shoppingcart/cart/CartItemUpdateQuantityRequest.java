@@ -1,6 +1,8 @@
 package org.abondar.experimental.shoppingcart.cart;
 
+import jakarta.validation.constraints.Min;
+
 public record CartItemUpdateQuantityRequest(
-        int quantity
+        @Min(1) int quantity
 ) {
 }
