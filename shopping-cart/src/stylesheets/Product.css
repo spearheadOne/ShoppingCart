@@ -1,0 +1,35 @@
+.product-card {
+    width: 250px;
+    height: 350px;
+    display: flex;
+    padding: 10px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 5px 5px 10px #ccc;
+}
+
+
+.product-card img {
+    width: 90%;
+    height: 40%;
+}
+
+.product-card > p {
+    padding: 10px;
+    font-size: 20px;
+}
+
+.product-card:hover {
+    box-shadow: 10px 10px 20px #ccc;
+}
+
+.product-button {
+    margin-top: 10px;
+    margin-bottom: auto;
+    padding: 10px;
+    color: white;
+    border: none;
+    cursor: pointer;
+    background-color: rgba(21, 26, 42, 0.787);
+}

@@ -1,0 +1,28 @@
+.layout {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.layout-price {
+    text-align: right;
+    margin-right: 50px;
+    margin-bottom: 20px;
+    margin-top: 1rem;
+    font-size: 20px;
+}
+
+.layout-order {
+    border: none;
+    color: white;
+    width: 150px;
+    background: brown;
+    cursor: pointer;
+    font-size: 20px;
+    border-radius: 12px;
+}
+
+
+.layout-order:hover {
+    background: rgb(89, 0, 190);
+}
