@@ -14,7 +14,6 @@ public class RestRouteConfig extends RouteBuilder {
         .host("localhost")
         .port(8080)
         .enableCORS(true)
-        .contextPath("/cart")
         .apiContextPath("/doc")
         .apiProperty("api.title", "Shopping Cart backend")
         .apiProperty("api.version", "v1")

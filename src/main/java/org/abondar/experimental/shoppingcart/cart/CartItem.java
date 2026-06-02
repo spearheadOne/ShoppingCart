@@ -1,4 +1,4 @@
-package org.abondar.experimental.shoppingcart.model;
+package org.abondar.experimental.shoppingcart.cart;
 
 import java.math.BigDecimal;
 

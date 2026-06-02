@@ -9,7 +9,7 @@ public class ProductRestRoute extends RouteBuilder {
     @Override
     public void configure() {
         rest()
-                .path("/product")
+                .path("/api/products")
                 .consumes("application/json")
                 .produces("application/json")
 
@@ -17,18 +17,18 @@ public class ProductRestRoute extends RouteBuilder {
                 .apiDocs(true)
                 .type(ProductCreateUpdateRequest.class)
                 .outType(ProductResponse.class)
-                .to("direct:post")
+                .to("direct:createProduct")
 
                 .put("/{id}")
                 .apiDocs(true)
                 .type(ProductCreateUpdateRequest.class)
                 .outType(ProductResponse.class)
-                .to("direct:put")
+                .to("direct:updateProduct")
 
                 .get("/{id}")
                 .apiDocs(true)
                 .outType(ProductResponse.class)
-                .to("direct:getById")
+                .to("direct:getProductById")
 
                 .get()
                 .apiDocs(true)
@@ -48,7 +48,7 @@ public class ProductRestRoute extends RouteBuilder {
 
                 .delete("/{id}")
                 .apiDocs(true)
-                .to("direct:delete");
+                .to("direct:deleteProduct");
 
     }
 }
