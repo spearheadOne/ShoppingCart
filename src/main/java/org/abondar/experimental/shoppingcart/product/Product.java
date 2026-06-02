@@ -1,17 +1,15 @@
-package org.abondar.experimental.shoppingcart.model;
+package org.abondar.experimental.shoppingcart.product;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
 
 import java.math.BigDecimal;
 
 @Data
 @AllArgsConstructor
-public class CartProduct{
+public class Product {
 
+   private String id;
    private String name;
    private String imgUrl;
    private BigDecimal price;

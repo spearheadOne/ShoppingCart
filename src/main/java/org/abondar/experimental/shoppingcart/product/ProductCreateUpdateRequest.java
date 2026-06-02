@@ -1,8 +1,8 @@
-package org.abondar.experimental.shoppingcart.model;
+package org.abondar.experimental.shoppingcart.product;
 
 import java.math.BigDecimal;
 
-public record CartProductGetResponse(
+public record ProductCreateUpdateRequest(
         String name,
         String imgUrl,
         BigDecimal price

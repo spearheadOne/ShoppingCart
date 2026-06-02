@@ -1,4 +1,4 @@
-package org.abondar.experimental.shoppingcart.route;
+package org.abondar.experimental.shoppingcart.product;
 
 import lombok.AllArgsConstructor;
 import org.apache.camel.builder.RouteBuilder;
@@ -22,11 +22,15 @@ public class MongoRoute extends RouteBuilder {
                 .routeId("postRoute")
                 .log("Posting product to mongo");
 
+        from("direct:put")
+                .routeId("putRoute")
+                        .log("Putting product to mongo");
+
         from("direct:getById")
                 .routeId("getByIdRoute")
                 .log("Getting product by id");
 
-        from("direct:getByLimit")
+        from("direct:getProducts")
                 .routeId("getByLimitRoute")
                 .log("Getting products by limit");
 
@@ -34,5 +38,9 @@ public class MongoRoute extends RouteBuilder {
         from("direct:getItems")
                 .routeId("getItemsRoute")
                 .log("Getting items from mongo");
+
+        from("direct:delete")
+                .routeId("deleteRoute")
+                .log("Deleting product from mongo");
     }
 }

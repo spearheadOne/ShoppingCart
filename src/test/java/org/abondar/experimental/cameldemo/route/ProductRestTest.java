@@ -1,10 +1,10 @@
 //package org.abondar.experimental.cameldemo.route;
 //
-//import org.abondar.experimental.shoppingcart.model.CartProduct;
-//import org.abondar.experimental.shoppingcart.model.CartProductPostResponse;
+//import org.abondar.experimental.shoppingcart.product.CartProduct;
+//import org.abondar.experimental.shoppingcart.product.CartProductPostResponse;
 //import org.abondar.experimental.shoppingcart.processor.ProductProcessor;
 //import org.abondar.experimental.shoppingcart.route.FirebaseRoute;
-//import org.abondar.experimental.shoppingcart.route.ProductRestRoute;
+//import org.abondar.experimental.shoppingcart.product.ProductRestRoute;
 //import org.abondar.experimental.shoppingcart.transform.ResponseBodyTransformer;
 //import org.junit.jupiter.api.BeforeAll;
 //import org.junit.jupiter.api.Order;
