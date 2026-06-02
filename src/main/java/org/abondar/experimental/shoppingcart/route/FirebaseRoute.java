@@ -1,5 +1,6 @@
 package org.abondar.experimental.shoppingcart.route;
 
+import lombok.AllArgsConstructor;
 import org.abondar.experimental.shoppingcart.processor.ProductProcessor;
 import org.abondar.experimental.shoppingcart.transform.ResponseBodyTransformer;
 import org.apache.camel.Exchange;
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
+@AllArgsConstructor
 public class FirebaseRoute extends RouteBuilder {
 
   @Value("${firebase.url}")
@@ -24,12 +26,6 @@ public class FirebaseRoute extends RouteBuilder {
   private final ProductProcessor productProcessor;
 
   private final ResponseBodyTransformer bodyTransformer;
-
-  @Autowired
-  public FirebaseRoute(ProductProcessor productProcessor, ResponseBodyTransformer bodyTransformer) {
-    this.productProcessor = productProcessor;
-    this.bodyTransformer = bodyTransformer;
-  }
 
   @Override
   public void configure() {

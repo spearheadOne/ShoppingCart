@@ -1,28 +1,25 @@
 package org.abondar.experimental.shoppingcart.processor;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.AllArgsConstructor;
 import org.abondar.experimental.shoppingcart.model.CartProduct;
 import org.abondar.experimental.shoppingcart.model.CartProductRequest;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;
 import org.apache.camel.support.DefaultMessage;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 @Component
+@AllArgsConstructor
 public class ProductProcessor implements Processor {
 
-    private ObjectMapper mapper;
+    private final ObjectMapper mapper;
 
-    @Autowired
-    public ProductProcessor(ObjectMapper mapper){
-        this.mapper = mapper;
-    }
 
     @Override
     public void process(Exchange exchange) throws Exception {

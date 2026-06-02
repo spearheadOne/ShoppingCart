@@ -20,7 +20,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: mappings,metrics,shutdown
+        include: help,info,metrics
 
 
 firebase:
