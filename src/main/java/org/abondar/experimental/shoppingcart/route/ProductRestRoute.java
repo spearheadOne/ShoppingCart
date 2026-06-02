@@ -20,13 +20,11 @@ public class ProductRestRoute extends RouteBuilder {
         .apiDocs(true)
             .type(CartProductRequest.class)
             .outType(CartProductPostResponse.class)
-        .to("log:org.abondar.experimental.cameldemo.shoppingcart.route?level=INFO")
             .to("direct:post")
 
         .get("/{id}")
             .apiDocs(true)
             .outType(CartProduct.class)
-            .to("log:org.abondar.experimental.cameldemo.shoppingcart.route?level=INFO")
             .to("direct:getById")
 
         .get()
@@ -36,7 +34,6 @@ public class ProductRestRoute extends RouteBuilder {
             .type(RestParamType.query)
             .endParam()
             .outType(CartProduct.class)
-            .to("log:org.abondar.experimental.cameldemo.shoppingcart.route?level=INFO")
             .to("direct:getByLimit");
 
   }

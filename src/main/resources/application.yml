@@ -1,30 +1,25 @@
 spring:
-  banner:
-    image:
-      location: banner.txt
-
-camel:
-  springboot:
+  application:
     name: ShoppingCart
-  component:
-    servlet:
-      allow-java-serialized-object: true
-  servlet:
-    mapping:
-      context-path: "/cart/*"
-  dataformat:
-    jackson:
-      use-list: true
+  main:
+    banner-mode: "console"
+
+
+
 
 management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always
+      status:
+        order: DOWN,OUT_OF_SERVICE,UP
+
   endpoints:
     web:
       exposure:
-        include: help,info,metrics
+        include: health,info,metrics,prometheus
 
 
-firebase:
-  url: "https://shoppingcart-a62bb-default-rtdb.europe-west1.firebasedatabase.app/"
-  products: "products.json"
-  cartItems: "cartItems.json"
 
