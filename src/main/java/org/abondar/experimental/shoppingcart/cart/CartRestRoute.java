@@ -9,8 +9,7 @@ public class CartRestRoute extends RouteBuilder {
     @Override
     public void configure() {
 
-        rest()
-                .path("/v1/carts")
+        rest("/v1/carts")
                 .produces("application/json")
 
                 .post()

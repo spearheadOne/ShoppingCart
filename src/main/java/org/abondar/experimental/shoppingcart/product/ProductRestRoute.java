@@ -9,8 +9,7 @@ import org.springframework.stereotype.Component;
 public class ProductRestRoute extends RouteBuilder {
     @Override
     public void configure() {
-        rest()
-                .path("/v1/products")
+        rest("/v1/products")
                 .consumes("application/json")
                 .produces("application/json")
 
