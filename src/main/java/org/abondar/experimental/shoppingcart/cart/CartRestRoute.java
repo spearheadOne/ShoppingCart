@@ -11,7 +11,6 @@ public class CartRestRoute extends RouteBuilder {
 
         rest()
                 .path("/v1/carts")
-                .consumes("application/json")
                 .produces("application/json")
 
                 .post()

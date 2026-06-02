@@ -30,7 +30,7 @@ dependencies {
 
     implementation("org.apache.camel.springboot:camel-spring-boot-starter:$camelVersion")
     implementation("org.apache.camel.springboot:camel-jackson3-starter:$camelVersion")
-    implementation("org.apache.camel.springboot:camel-servlet-starter:$camelVersion")
+    implementation("org.apache.camel.springboot:camel-platform-http-starter:$camelVersion")
     implementation("org.apache.camel.springboot:camel-springdoc-starter:$camelVersion")
     implementation("org.apache.camel:camel-http:$camelVersion")
 

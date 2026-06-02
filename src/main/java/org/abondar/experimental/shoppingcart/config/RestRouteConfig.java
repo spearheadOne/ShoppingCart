@@ -15,7 +15,7 @@ public class RestRouteConfig extends RouteBuilder {
                 .contextPath("/api")
                 .apiProperty("api.title", "Shopping Cart backend")
                 .apiProperty("api.version", "v1")
-                .component("servlet")
+                .component("platform-http")
                 .clientRequestValidation(true)
                 .bindingMode(RestBindingMode.auto);
     }
