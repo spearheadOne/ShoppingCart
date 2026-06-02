@@ -1,8 +1,8 @@
-package org.abondar.experimental.cameldemo.shoppingcart.route;
+package org.abondar.experimental.shoppingcart.route;
 
-import org.abondar.experimental.cameldemo.shoppingcart.model.CartProduct;
-import org.abondar.experimental.cameldemo.shoppingcart.model.CartProductPostResponse;
-import org.abondar.experimental.cameldemo.shoppingcart.model.CartProductRequest;
+import org.abondar.experimental.shoppingcart.model.CartProduct;
+import org.abondar.experimental.shoppingcart.model.CartProductPostResponse;
+import org.abondar.experimental.shoppingcart.model.CartProductRequest;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.rest.RestParamType;
 import org.springframework.stereotype.Component;

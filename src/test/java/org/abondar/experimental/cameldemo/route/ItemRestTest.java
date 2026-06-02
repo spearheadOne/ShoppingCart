@@ -1,10 +1,10 @@
 package org.abondar.experimental.cameldemo.route;
 
-import org.abondar.experimental.cameldemo.shoppingcart.model.CartItems;
-import org.abondar.experimental.cameldemo.shoppingcart.processor.ProductProcessor;
-import org.abondar.experimental.cameldemo.shoppingcart.route.FirebaseRoute;
-import org.abondar.experimental.cameldemo.shoppingcart.route.ItemRestRoute;
-import org.abondar.experimental.cameldemo.shoppingcart.transform.ResponseBodyTransformer;
+import org.abondar.experimental.shoppingcart.model.CartItems;
+import org.abondar.experimental.shoppingcart.processor.ProductProcessor;
+import org.abondar.experimental.shoppingcart.route.FirebaseRoute;
+import org.abondar.experimental.shoppingcart.route.ItemRestRoute;
+import org.abondar.experimental.shoppingcart.transform.ResponseBodyTransformer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;

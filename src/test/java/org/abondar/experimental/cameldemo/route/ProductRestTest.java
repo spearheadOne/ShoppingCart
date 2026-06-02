@@ -1,11 +1,11 @@
 package org.abondar.experimental.cameldemo.route;
 
-import org.abondar.experimental.cameldemo.shoppingcart.model.CartProduct;
-import org.abondar.experimental.cameldemo.shoppingcart.model.CartProductPostResponse;
-import org.abondar.experimental.cameldemo.shoppingcart.processor.ProductProcessor;
-import org.abondar.experimental.cameldemo.shoppingcart.route.FirebaseRoute;
-import org.abondar.experimental.cameldemo.shoppingcart.route.ProductRestRoute;
-import org.abondar.experimental.cameldemo.shoppingcart.transform.ResponseBodyTransformer;
+import org.abondar.experimental.shoppingcart.model.CartProduct;
+import org.abondar.experimental.shoppingcart.model.CartProductPostResponse;
+import org.abondar.experimental.shoppingcart.processor.ProductProcessor;
+import org.abondar.experimental.shoppingcart.route.FirebaseRoute;
+import org.abondar.experimental.shoppingcart.route.ProductRestRoute;
+import org.abondar.experimental.shoppingcart.transform.ResponseBodyTransformer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;

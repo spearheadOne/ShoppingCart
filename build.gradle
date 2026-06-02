@@ -1,13 +1,13 @@
 plugins {
     id "java"
     id "idea"
-//    id "org.springframework.boot" version "$springBootVersion"
-//    id 'io.spring.dependency-management' version "$springDependencyVersion"
-//    id "io.freefair.lombok" version "$lombokVersion"
+    id "org.springframework.boot" version "$springBootVersion"
+    id 'io.spring.dependency-management' version "$springDependencyVersion"
+    id "io.freefair.lombok" version "$lombokVersion"
 }
 
-group "org.abondar.experimental.cameldemo.shoppingcart"
-version '1.0-SNAPSHOT'
+group "org.abondar.experimental.shoppingcart"
+version '2.0'
 
 
 java {
@@ -24,40 +24,25 @@ repositories {
 
 dependencies {
 
-//    implementation("org.springframework.boot:spring-boot-starter-web")
-//    implementation("org.springframework.boot:spring-boot-starter-actuator")
-//    implementation("org.springframework.boot:spring-boot-starter-webflux")
-//
-//    implementation("org.apache.camel.springboot:camel-spring-boot-starter:$camelVersion")
-//    implementation("org.apache.camel.springboot:camel-jackson-starter:$camelVersion")
-//    implementation("org.apache.camel.springboot:camel-servlet-starter:$camelVersion")
-//    implementation("org.apache.camel.springboot:camel-swagger-java-starter:$camelVersion")
-//    implementation("org.apache.camel.springboot:camel-springdoc-starter:$camelVersion")
-//    implementation("org.apache.camel:camel-http:$camelVersion")
-//    implementation("ch.qos.logback:logback-core:$logbackVersion")
-//
-//    testImplementation("org.springframework.boot:spring-boot-starter-test")
-//    testImplementation("org.apache.camel:camel-test-spring-junit5:$camelVersion")
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
+
+    implementation("org.apache.camel.springboot:camel-spring-boot-starter:$camelVersion")
+    implementation("org.apache.camel.springboot:camel-jackson-starter:$camelVersion")
+    implementation("org.apache.camel.springboot:camel-servlet-starter:$camelVersion")
+    implementation("org.apache.camel.springboot:camel-swagger-java-starter:$camelVersion")
+    implementation("org.apache.camel.springboot:camel-springdoc-starter:$camelVersion")
+    implementation("org.apache.camel:camel-http:$camelVersion")
+    implementation("ch.qos.logback:logback-core:$logbackVersion")
+
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.apache.camel:camel-test-spring-junit5:$camelVersion")
 }
 
-//test {
-//    useJUnitPlatform()
-//    filter {
-//        excludeTestsMatching("org.abondar.experimental.cameldemo.route.ItemRestTest")
-//        excludeTestsMatching("org.abondar.experimental.cameldemo.route.ProductRestTest")
-//    }
-//}
-//
-//task integrationTest(type: Test) {
-//    useJUnitPlatform()
-//
-//    filter{
-//        excludeTestsMatching("org.abondar.experimental.cameldemo.route.FirebaseRouteTest")
-//    }
-//
-//    systemProperty 'spring.profiles.active', 'integration'
-//}
-//
-//bootBuildImage {
-//    imageName = "abondar/shoppingCart"
-//}
+
+
+
+bootBuildImage {
+    imageName = "abondar/shoppingCart"
+}

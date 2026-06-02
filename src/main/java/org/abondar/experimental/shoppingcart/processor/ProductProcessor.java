@@ -1,8 +1,8 @@
-package org.abondar.experimental.cameldemo.shoppingcart.processor;
+package org.abondar.experimental.shoppingcart.processor;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.abondar.experimental.cameldemo.shoppingcart.model.CartProduct;
-import org.abondar.experimental.cameldemo.shoppingcart.model.CartProductRequest;
+import org.abondar.experimental.shoppingcart.model.CartProduct;
+import org.abondar.experimental.shoppingcart.model.CartProductRequest;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;

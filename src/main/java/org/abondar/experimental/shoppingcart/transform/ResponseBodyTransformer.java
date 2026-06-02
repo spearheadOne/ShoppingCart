@@ -1,4 +1,4 @@
-package org.abondar.experimental.cameldemo.shoppingcart.transform;
+package org.abondar.experimental.shoppingcart.transform;
 
 import org.springframework.stereotype.Component;
 

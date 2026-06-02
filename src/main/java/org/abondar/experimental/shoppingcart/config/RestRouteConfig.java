@@ -1,4 +1,4 @@
-package org.abondar.experimental.cameldemo.shoppingcart.config;
+package org.abondar.experimental.shoppingcart.config;
 
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.rest.RestBindingMode;

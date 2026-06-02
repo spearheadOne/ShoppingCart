@@ -1,7 +1,7 @@
-package org.abondar.experimental.cameldemo.shoppingcart.route;
+package org.abondar.experimental.shoppingcart.route;
 
-import org.abondar.experimental.cameldemo.shoppingcart.processor.ProductProcessor;
-import org.abondar.experimental.cameldemo.shoppingcart.transform.ResponseBodyTransformer;
+import org.abondar.experimental.shoppingcart.processor.ProductProcessor;
+import org.abondar.experimental.shoppingcart.transform.ResponseBodyTransformer;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.http.base.HttpOperationFailedException;
