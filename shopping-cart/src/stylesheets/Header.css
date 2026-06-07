@@ -19,17 +19,3 @@
 .header-li {
     padding: 10px;
 }
-
-.header-logout {
-    padding: 10px;
-    background: orange;
-    border: none;
-    margin-top: 30px;
-    margin-right: 20px;
-    border-radius: 12px;
-}
-
-.header-logout:hover {
-    background: rgb(0,6,59);
-    color: whi;
-}
