@@ -1,23 +1,22 @@
-import { useSelector, useDispatch } from "react-redux"
 import Layout from "./components/Layout";
 import { useEffect } from "react";
 import Notification from "./components/Notification";
-
-import { fetchCartData, sendCartData } from "./store/cart-action";
-import {fetchProducts} from "./store/product-action";
+import cartStore from "./store/cart-store";
 
 let isFirstRender = true
 function App() {
 
-  const cart = useSelector(state => state.cart);
-  const dispatch = useDispatch();
-  const notification = useSelector(state => state.notification.notification)
+  const cart = cartStore(state => state.cart);
+  const notification = cartStore(state => state.notification);
+  const fetchCartData = cartStore(state => state.fetchCartData);
+  const fetchProducts = cartStore(state => state.fetchProducts);
+  const sendCartData = cartStore(state => state.sendCartData);
 
 
    useEffect(()=>{
-     dispatch(fetchCartData())
-     dispatch(fetchProducts())
-   },[dispatch]);
+     fetchCartData()
+     fetchProducts()
+   },[fetchCartData, fetchProducts]);
 
 
   useEffect(() => {
@@ -28,10 +27,10 @@ function App() {
     }
 
     if (cart.changed){
-      dispatch(sendCartData(cart));
+      sendCartData(cart);
     }
  
-  }, [cart,dispatch]);
+  }, [cart, sendCartData]);
 
   return (
     <div>

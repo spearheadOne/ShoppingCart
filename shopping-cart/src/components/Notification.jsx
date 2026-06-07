@@ -2,18 +2,17 @@ import React from "react";
 
 import "../stylesheets/Notification.css"
 import { Alert } from "@mui/material"
-import { useDispatch, useSelector } from "react-redux";
-import { notificationActions } from "../store/notification-slice";
+import cartStore from "../store/cart-store";
 
 
 function Notification(props) {
-    const notification = useSelector(state => state.notification.notification)
-    const dispatch = useDispatch()
+    const notification = cartStore(state => state.notification)
+    const showNotification = cartStore(state => state.showNotification)
 
     function handleClose(){
-        dispatch(notificationActions.showNotification({
+        showNotification({
             open:false
-        }));
+        });
     }
 
 

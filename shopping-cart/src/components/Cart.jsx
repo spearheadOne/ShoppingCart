@@ -1,14 +1,13 @@
 import React from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { cartActions } from "../store/cart-slice";
+import cartStore from "../store/cart-store";
 import "../stylesheets/Cart.css"
 
 function Cart() {
-    const total = useSelector(state => state.cart.itemsTotal); 
-    const dispatch = useDispatch();
+    const total = cartStore(state => state.cart.itemsTotal);
+    const toggleCart = cartStore(state => state.toggleCart);
 
     function showCart() {
-        dispatch(cartActions.setShowCart());
+        toggleCart();
     }
 
     return (

@@ -2,19 +2,19 @@ import React from "react";
 import Header from "./Header"
 import ProductList from "./ProductList";
 import CartItemList from "./CartItemList"
-import { useSelector } from "react-redux";
+import cartStore from "../store/cart-store";
 
 import "../stylesheets/Layout.css"
 
 function Layout() {
     let total = 0;
-    const items = useSelector(state => state.cart.items);
+    const items = cartStore(state => state.cart.items);
 
     items.forEach(item => {
         total += item.totalPrice;
     })
 
-    const showCart = useSelector(state => state.cart.showCart);
+    const showCart = cartStore(state => state.cart.showCart);
 
     return (
         <React.Fragment>

@@ -2,11 +2,11 @@ import React from "react";
 
 import CartItem from "./CartItem";
 import "../stylesheets/CartItemList.css"
-import { useSelector } from "react-redux";
+import cartStore from "../store/cart-store";
 
 function CartItemList() {
 
-    let cartItems = useSelector(state => state.cart.items);
+    let cartItems = cartStore(state => state.cart.items);
     
     cartItems = cartItems.map(item => (
         <li className="cart-item-li"  key={item.id}>

@@ -1,34 +1,30 @@
 import React from "react";
-import { useDispatch } from "react-redux";
-import { cartActions } from "../store/cart-slice";
+import cartStore from "../store/cart-store";
 
 import "../stylesheets/CartItem.css"
 
 
 function CartItem(props){
 
-    const dispatch = useDispatch();
+    const addItemToCart = cartStore(state => state.addToCart);
+    const removeItemFromCart = cartStore(state => state.removeFromCart);
     
     function addToCart(){
         const id = props.id;
         const name = props.name;
         const price = props.price;
 
-        dispatch(
-            cartActions.addToCart({
-                id,
-                name,
-                price
-            })
-        );
+        addItemToCart({
+            id,
+            name,
+            price
+        });
     }
 
 
     function removeFromCart(){
         const id = props.id;
-        dispatch(
-            cartActions.removeFromCart({id})
-        );
+        removeItemFromCart(id);
     }
 
 

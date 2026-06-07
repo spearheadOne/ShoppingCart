@@ -2,11 +2,11 @@ import React from "react"
 
 import Product from "./Product"
 import "../stylesheets/ProductList.css"
-import { useSelector } from "react-redux";
+import cartStore from "../store/cart-store";
 
 function ProductList() {
 
-     let products = useSelector(state => state.product.products);
+     let products = cartStore(state => state.products);
    
      
     const renderedProducts = products.map((product, id) => (

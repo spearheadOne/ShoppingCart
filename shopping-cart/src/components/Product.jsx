@@ -1,26 +1,22 @@
 import React from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { cartActions } from "../store/cart-slice";
+import cartStore from "../store/cart-store";
 
 import "../stylesheets/Product.css"
 
 function Product(props) {
 
-    const dispatch = useDispatch();
-    const items = useSelector((state)=> state.cart.items);
+    const addItemToCart = cartStore(state => state.addToCart);
     
     function addToCart() {
         const name = props.name;
         const id = props.id;
         const price = props.price
 
-        dispatch(
-            cartActions.addToCart({
-                name,
-                id,
-                price
-            })
-        )
+        addItemToCart({
+            name,
+            id,
+            price
+        })
          
     }
 
