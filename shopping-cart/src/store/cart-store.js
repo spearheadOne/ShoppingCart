@@ -1,5 +1,10 @@
 
 import { create } from "zustand";
+import {
+    parseCartItemAddRequest,
+    parseCartItemUpdateQuantityRequest,
+    parseCartResponse
+} from "../schema/cart-schema";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api/v1";
 const CART_ID_KEY = "shopping-cart-id";
@@ -81,15 +86,15 @@ const cartStore = create((set, get) => ({
         const path = `/carts/${cartId}/items${itemExists ? `/${productId}` : ""}`;
         const method = itemExists ? "PATCH" : "POST";
         const body = itemExists
-            ? { quantity }
-            : { productId, quantity };
+            ? parseCartItemUpdateQuantityRequest({ quantity })
+            : parseCartItemAddRequest({ productId, quantity });
 
         const cartData = await apiFetch(path, {
             method,
             body: JSON.stringify(body)
         });
 
-        get().replaceCartData(cartData);
+        get().replaceCartData(parseCartResponse(cartData));
     },
 
     addToCart: async (newItem) => {
@@ -196,13 +201,15 @@ const cartStore = create((set, get) => ({
             const cartData = nextQuantity > 0
                 ? await apiFetch(`/carts/${cartId}/items/${id}`, {
                     method: "PATCH",
-                    body: JSON.stringify({ quantity: nextQuantity })
+                    body: JSON.stringify(parseCartItemUpdateQuantityRequest({
+                        quantity: nextQuantity
+                    }))
                 })
                 : await apiFetch(`/carts/${cartId}/items/${id}`, {
                     method: "DELETE"
                 });
 
-            get().replaceCartData(cartData);
+            get().replaceCartData(parseCartResponse(cartData));
         } catch (err) {
             get().showNotification({
                 open: true,
@@ -226,12 +233,14 @@ const cartStore = create((set, get) => ({
             return;
         }
 
-        localStorage.setItem(CART_ID_KEY, cartData.cartId);
+        const parsedCart = parseCartResponse(cartData);
+
+        localStorage.setItem(CART_ID_KEY, parsedCart.cartId);
 
         set((state) => ({
             cart: {
                 ...state.cart,
-                ...mapCart(cartData),
+                ...mapCart(parsedCart),
                 showCart: state.cart.showCart
             }
         }));
@@ -244,7 +253,7 @@ const cartStore = create((set, get) => ({
             return existingCartId;
         }
 
-        const cartData = await apiFetch("/carts", { method: "POST" });
+        const cartData = parseCartResponse(await apiFetch("/carts", { method: "POST" }));
         get().replaceCartData(cartData);
 
         return cartData.cartId;
@@ -253,7 +262,7 @@ const cartStore = create((set, get) => ({
     fetchCartData: async () => {
         try {
             const cartId = await get().ensureCart();
-            const cartData = await apiFetch(`/carts/${cartId}`);
+            const cartData = parseCartResponse(await apiFetch(`/carts/${cartId}`));
             get().replaceCartData(cartData);
         } catch (err) {
             get().showNotification({
