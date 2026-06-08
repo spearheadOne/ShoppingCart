@@ -1,24 +1,60 @@
 
 import { create } from "zustand";
 
-const CART_URL = "https://shoppingcart-a62bb-default-rtdb.europe-west1.firebasedatabase.app/cartItems.json";
-const PRODUCTS_URL = "https://shoppingcart-a62bb-default-rtdb.europe-west1.firebasedatabase.app/products.json";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api/v1";
+const CART_ID_KEY = "shopping-cart-id";
+
+const apiFetch = async (path, options = {}) => {
+    const resp = await fetch(`${API_BASE_URL}${path}`, {
+        headers: {
+            "Content-Type": "application/json",
+            ...(options.headers || {})
+        },
+        ...options
+    });
+
+    if (!resp.ok) {
+        throw new Error(`Request failed with status ${resp.status}`);
+    }
+
+    if (resp.status === 204) {
+        return null;
+    }
+
+    return resp.json();
+};
 
 const initialCart = {
+    id: null,
     items: [],
     itemsTotal: 0,
     showCart: false,
     changed: false
 };
 
-const mapProducts = (rawProducts = {}) => {
-    return Object.entries(rawProducts).map(([id, product]) => ({
-        id,
+const mapProducts = (productData = {}) => (
+    (productData.products || productData || []).map((product) => ({
+        id: product.id,
         name: product.name,
         imgURL: product.imgUrl,
-        price: product.price
-    }));
-};
+        price: Number(product.price)
+    }))
+);
+
+const mapCart = (cartData) => ({
+    id: cartData.cartId,
+    items: (cartData.items || []).map((item) => ({
+        id: item.productId,
+        name: item.name,
+        imgURL: item.imgUrl,
+        price: Number(item.unitPrice),
+        quantity: item.quantity,
+        totalPrice: Number(item.lineTotal)
+    })),
+    itemsTotal: cartData.itemsTotal || 0,
+    showCart: false,
+    changed: false
+});
 
 const cartStore = create((set, get) => ({
     cart: initialCart,
@@ -35,7 +71,31 @@ const cartStore = create((set, get) => ({
         });
     },
 
-    addToCart: (newItem) => {
+    syncCartItem: async (productId, quantity, itemExists) => {
+        const cartId = get().cart.id;
+
+        if (!cartId) {
+            return;
+        }
+
+        const path = `/carts/${cartId}/items${itemExists ? `/${productId}` : ""}`;
+        const method = itemExists ? "PATCH" : "POST";
+        const body = itemExists
+            ? { quantity }
+            : { productId, quantity };
+
+        const cartData = await apiFetch(path, {
+            method,
+            body: JSON.stringify(body)
+        });
+
+        get().replaceCartData(cartData);
+    },
+
+    addToCart: async (newItem) => {
+        const currentItem = get().cart.items.find((item) => item.id === newItem.id);
+        const nextQuantity = currentItem ? currentItem.quantity + 1 : 1;
+
         set((state) => {
             const existingItem = state.cart.items.find((item) => item.id === newItem.id);
 
@@ -75,9 +135,22 @@ const cartStore = create((set, get) => ({
                 }
             };
         });
+
+        try {
+            await get().syncCartItem(newItem.id, nextQuantity, Boolean(currentItem));
+        } catch (err) {
+            get().showNotification({
+                open: true,
+                message: "Error updating cart",
+                type: "error"
+            });
+        }
     },
 
-    removeFromCart: (id) => {
+    removeFromCart: async (id) => {
+        const currentItem = get().cart.items.find((item) => item.id === id);
+        const nextQuantity = currentItem ? currentItem.quantity - 1 : 0;
+
         set((state) => {
             const existingItem = state.cart.items.find((item) => item.id === id);
 
@@ -112,6 +185,31 @@ const cartStore = create((set, get) => ({
                 }
             };
         });
+
+        try {
+            const cartId = get().cart.id;
+
+            if (!cartId || !currentItem) {
+                return;
+            }
+
+            const cartData = nextQuantity > 0
+                ? await apiFetch(`/carts/${cartId}/items/${id}`, {
+                    method: "PATCH",
+                    body: JSON.stringify({ quantity: nextQuantity })
+                })
+                : await apiFetch(`/carts/${cartId}/items/${id}`, {
+                    method: "DELETE"
+                });
+
+            get().replaceCartData(cartData);
+        } catch (err) {
+            get().showNotification({
+                open: true,
+                message: "Error updating cart",
+                type: "error"
+            });
+        }
     },
 
     toggleCart: () => {
@@ -128,20 +226,34 @@ const cartStore = create((set, get) => ({
             return;
         }
 
+        localStorage.setItem(CART_ID_KEY, cartData.cartId);
+
         set((state) => ({
             cart: {
                 ...state.cart,
-                items: cartData.items || [],
-                itemsTotal: cartData.itemsTotal ?? cartData.totalPrice ?? 0,
-                changed: false
+                ...mapCart(cartData),
+                showCart: state.cart.showCart
             }
         }));
     },
 
+    ensureCart: async () => {
+        const existingCartId = localStorage.getItem(CART_ID_KEY);
+
+        if (existingCartId) {
+            return existingCartId;
+        }
+
+        const cartData = await apiFetch("/carts", { method: "POST" });
+        get().replaceCartData(cartData);
+
+        return cartData.cartId;
+    },
+
     fetchCartData: async () => {
         try {
-            const resp = await fetch(CART_URL);
-            const cartData = await resp.json();
+            const cartId = await get().ensureCart();
+            const cartData = await apiFetch(`/carts/${cartId}`);
             get().replaceCartData(cartData);
         } catch (err) {
             get().showNotification({
@@ -153,36 +265,21 @@ const cartStore = create((set, get) => ({
     },
 
     sendCartData: async (cart) => {
-        get().showNotification({
-            open: true,
-            message: "Sending request",
-            type: "warning"
-        });
-
-        try {
-            await fetch(CART_URL, {
-                method: "PUT",
-                body: JSON.stringify(cart)
-            });
-
-            get().showNotification({
-                open: true,
-                message: "Data sent succesfully",
-                type: "success"
-            });
-        } catch (err) {
-            get().showNotification({
-                open: true,
-                message: "Error sending data",
-                type: "error"
-            });
+        if (!cart.changed) {
+            return;
         }
+
+        set((state) => ({
+            cart: {
+                ...state.cart,
+                changed: false
+            }
+        }));
     },
 
     fetchProducts: async () => {
         try {
-            const resp = await fetch(PRODUCTS_URL);
-            const productData = await resp.json();
+            const productData = await apiFetch("/products");
             set({ products: mapProducts(productData) });
         } catch (err) {
             get().showNotification({

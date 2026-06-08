@@ -21,6 +21,23 @@ repositories {
     mavenCentral()
 }
 
+def frontendDir = file("shopping-cart")
+
+tasks.register("npmBuild", Exec) {
+    workingDir frontendDir
+    commandLine "npm", "run", "build"
+}
+
+tasks.register("copyFrontend", Copy) {
+    dependsOn "npmBuild"
+    from "$frontendDir/dist"
+    into layout.buildDirectory.dir("resources/main/static")
+}
+
+processResources {
+    dependsOn "copyFrontend"
+}
+
 
 dependencies {
 
