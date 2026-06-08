@@ -1,4 +1,4 @@
-
+import axios from "axios";
 import { create } from "zustand";
 import {
     parseCartItemAddRequest,
@@ -9,24 +9,38 @@ import {
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api/v1";
 const CART_ID_KEY = "shopping-cart-id";
 
-const apiFetch = async (path, options = {}) => {
-    const resp = await fetch(`${API_BASE_URL}${path}`, {
-        headers: {
-            "Content-Type": "application/json",
-            ...(options.headers || {})
-        },
-        ...options
-    });
-
-    if (!resp.ok) {
-        throw new Error(`Request failed with status ${resp.status}`);
+const apiClient = axios.create({
+    baseURL: API_BASE_URL,
+    headers: {
+        "Content-Type": "application/json"
     }
+});
 
-    if (resp.status === 204) {
-        return null;
+const apiRequest = async (path, options = {}) => {
+    const { headers, ...requestOptions } = options;
+
+    try {
+        const resp = await apiClient.request({
+            url: path,
+            ...requestOptions,
+            headers: {
+                "Content-Type": "application/json",
+                ...(headers || {})
+            }
+        });
+
+        if (resp.status === 204) {
+            return null;
+        }
+
+        return resp.data;
+    } catch (err) {
+        if (axios.isAxiosError(err) && err.response) {
+            throw new Error(`Request failed with status ${err.response.status}`);
+        }
+
+        throw err;
     }
-
-    return resp.json();
 };
 
 const initialCart = {
@@ -89,9 +103,9 @@ const cartStore = create((set, get) => ({
             ? parseCartItemUpdateQuantityRequest({ quantity })
             : parseCartItemAddRequest({ productId, quantity });
 
-        const cartData = await apiFetch(path, {
+        const cartData = await apiRequest(path, {
             method,
-            body: JSON.stringify(body)
+            data: body
         });
 
         get().replaceCartData(parseCartResponse(cartData));
@@ -199,13 +213,13 @@ const cartStore = create((set, get) => ({
             }
 
             const cartData = nextQuantity > 0
-                ? await apiFetch(`/carts/${cartId}/items/${id}`, {
+                ? await apiRequest(`/carts/${cartId}/items/${id}`, {
                     method: "PATCH",
-                    body: JSON.stringify(parseCartItemUpdateQuantityRequest({
+                    data: parseCartItemUpdateQuantityRequest({
                         quantity: nextQuantity
-                    }))
+                    })
                 })
-                : await apiFetch(`/carts/${cartId}/items/${id}`, {
+                : await apiRequest(`/carts/${cartId}/items/${id}`, {
                     method: "DELETE"
                 });
 
@@ -253,7 +267,7 @@ const cartStore = create((set, get) => ({
             return existingCartId;
         }
 
-        const cartData = parseCartResponse(await apiFetch("/carts", { method: "POST" }));
+        const cartData = parseCartResponse(await apiRequest("/carts", { method: "POST" }));
         get().replaceCartData(cartData);
 
         return cartData.cartId;
@@ -262,7 +276,7 @@ const cartStore = create((set, get) => ({
     fetchCartData: async () => {
         try {
             const cartId = await get().ensureCart();
-            const cartData = parseCartResponse(await apiFetch(`/carts/${cartId}`));
+            const cartData = parseCartResponse(await apiRequest(`/carts/${cartId}`));
             get().replaceCartData(cartData);
         } catch (err) {
             get().showNotification({
@@ -288,7 +302,7 @@ const cartStore = create((set, get) => ({
 
     fetchProducts: async () => {
         try {
-            const productData = await apiFetch("/products");
+            const productData = await apiRequest("/products");
             set({ products: mapProducts(productData) });
         } catch (err) {
             get().showNotification({
