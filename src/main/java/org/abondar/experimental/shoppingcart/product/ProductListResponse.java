@@ -6,6 +6,6 @@ public record ProductListResponse(
         List<ProductResponse> products,
         int limit,
         int offset,
-        int total
+        long total
 ) {
 }

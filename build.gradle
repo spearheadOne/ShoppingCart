@@ -34,7 +34,7 @@ tasks.register("copyFrontend", Copy) {
     into layout.buildDirectory.dir("resources/main/static")
 }
 
-processResources {
+bootJar {
     dependsOn "copyFrontend"
 }
 
@@ -44,6 +44,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-validation")
+    implementation("org.springframework.boot:spring-boot-starter-data-redis")
 
     implementation("org.apache.camel.springboot:camel-spring-boot-starter:$camelVersion")
     implementation("org.apache.camel.springboot:camel-jackson3-starter:$camelVersion")
@@ -53,10 +54,22 @@ dependencies {
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.apache.camel:camel-test-spring-junit5:$camelVersion")
+
+    implementation("org.mybatis.spring.boot:mybatis-spring-boot-starter:4.0.0")
+    implementation("org.springframework.boot:spring-boot-starter-liquibase")
+
+    runtimeOnly("com.h2database:h2")
+
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.mybatis.spring.boot:mybatis-spring-boot-starter-test:4.0.0")
+    testImplementation("org.apache.camel:camel-test-junit5")
+    testImplementation("org.springframework.boot:spring-boot-starter-restclient-test")
 }
 
 
-
+tasks.named("test") {
+    useJUnitPlatform()
+}
 
 bootBuildImage {
     imageName = "abondar/shoppingCart"
