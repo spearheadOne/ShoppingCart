@@ -20,13 +20,6 @@ Camel + Spring Boot based [shopping cart react-app](https://github.com/abondar24
 ./gradlew clean test
 ```
 
-### Integration test
-
-```
-./gradlew clean integrationTest
-```
-Note: corresponding test data should be created in firebase
-
 ### Run
 - Run the app using gradlew
 ```

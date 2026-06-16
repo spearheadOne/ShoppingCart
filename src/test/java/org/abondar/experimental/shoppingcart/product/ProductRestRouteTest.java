@@ -8,7 +8,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import java.math.BigDecimal;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -30,18 +34,18 @@ public class ProductRestRouteTest {
 
 
     @Test
-    void getProductByIdR() {
+    void getProductById() {
         restTestClient.get()
                 .uri("/v1/products/{id}", "11111111-1111-1111-1111-111111111111")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(ProductResponse.class)
                 .value(response -> {
-                    assertThat(response).isNotNull();
-                    assertThat(response.id()).isEqualTo("11111111-1111-1111-1111-111111111111");
-                    assertThat(response.name()).isEqualTo("Keyboard");
-                    assertThat(response.imgUrl()).isEqualTo("/images/keyboard.png");
-                    assertThat(response.price()).isEqualByComparingTo("99.99");
+                    assertNotNull(response);
+                    assertEquals("11111111-1111-1111-1111-111111111111", response.id());
+                    assertEquals("Keyboard", response.name());
+                    assertEquals("/images/keyboard.png", response.imgUrl());
+                    assertEquals(0, response.price().compareTo(new BigDecimal("99.99")));
                 });
     }
 
@@ -53,10 +57,11 @@ public class ProductRestRouteTest {
                 .expectStatus().isNotFound()
                 .expectBody(ErrorResponse.class)
                 .value(response -> {
-                    assertThat(response).isNotNull();
-                    assertThat(response.code()).isEqualTo("PRODUCT_NOT_FOUND");
-                    assertThat(response.message()).isEqualTo(
-                            "Product with id 00000000-0000-0000-0000-000000000000 not found");
+                    assertNotNull(response);
+                    assertEquals("PRODUCT_NOT_FOUND", response.code());
+                    assertEquals(
+                            "Product with id 00000000-0000-0000-0000-000000000000 not found",
+                            response.message());
                 });
     }
 
@@ -73,11 +78,11 @@ public class ProductRestRouteTest {
                 .expectStatus().isOk()
                 .expectBody(ProductListResponse.class)
                 .value(response -> {
-                    assertThat(response).isNotNull();
-                    assertThat(response.limit()).isEqualTo(5);
-                    assertThat(response.offset()).isEqualTo(5);
-                    assertThat(response.total()).isEqualTo(15);
-                    assertThat(response.products()).hasSize(5);
+                    assertNotNull(response);
+                    assertEquals(5, response.limit());
+                    assertEquals(5, response.offset());
+                    assertEquals(15, response.total());
+                    assertEquals(5, response.products().size());
                 });
     }
 
@@ -90,11 +95,11 @@ public class ProductRestRouteTest {
                 .expectStatus().isOk()
                 .expectBody(ProductListResponse.class)
                 .value(response -> {
-                    assertThat(response).isNotNull();
-                    assertThat(response.limit()).isEqualTo(10);
-                    assertThat(response.offset()).isZero();
-                    assertThat(response.total()).isEqualTo(15);
-                    assertThat(response.products()).hasSize(10);
+                    assertNotNull(response);
+                    assertEquals(10, response.limit());
+                    assertEquals(0, response.offset());
+                    assertEquals(15, response.total());
+                    assertEquals(10, response.products().size());
                 });
     }
 
@@ -111,9 +116,9 @@ public class ProductRestRouteTest {
                 .expectStatus().isBadRequest()
                 .expectBody(ErrorResponse.class)
                 .value(response -> {
-                    assertThat(response).isNotNull();
-                    assertThat(response.code()).isEqualTo("BAD_REQUEST");
-                    assertThat(response.message()).isEqualTo("Wrong pagination params");
+                    assertNotNull(response);
+                    assertEquals("BAD_REQUEST", response.code());
+                    assertEquals("Wrong pagination params", response.message());
                 });
 
     }
