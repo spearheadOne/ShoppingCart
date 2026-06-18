@@ -1,6 +1,7 @@
 package org.abondar.experimental.shoppingcart.cart;
 
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.model.rest.RestDefinition;
 import org.apache.camel.model.rest.RestParamType;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +15,7 @@ public class CartRestRoute extends RouteBuilder {
 
                 .post()
                 .description("Create a new shopping cart")
+                .consumes("application/json")
                 .apiDocs(true)
                 .outType(CartResponse.class)
                 .responseMessage()
@@ -43,6 +45,7 @@ public class CartRestRoute extends RouteBuilder {
                 .to("direct:getCart")
 
                 .post("/{id}/items")
+                .consumes("application/json")
                 .description("Add product to cart")
                 .apiDocs(true)
                 .type(CartItemAddRequest.class)
@@ -96,7 +99,7 @@ public class CartRestRoute extends RouteBuilder {
                 .code(404)
                 .message("Cart or product not found")
                 .endResponseMessage()
-                .to("direct:updateCartItem")
+                .to("direct:updateCartQuantity")
 
                 .delete("/{id}/items/{productId}")
                 .description("Remove product from cart")

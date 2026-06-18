@@ -22,6 +22,7 @@ repositories {
 }
 
 def frontendDir = file("shopping-cart")
+def frontendBuildOutput = layout.buildDirectory.dir("frontend")
 
 tasks.register("npmBuild", Exec) {
     workingDir frontendDir
@@ -31,11 +32,19 @@ tasks.register("npmBuild", Exec) {
 tasks.register("copyFrontend", Copy) {
     dependsOn "npmBuild"
     from "$frontendDir/dist"
-    into layout.buildDirectory.dir("resources/main/static")
+    into frontendBuildOutput.map { it.dir("static") }
 }
 
 bootJar {
     dependsOn "copyFrontend"
+    from(frontendBuildOutput) {
+        into "BOOT-INF/classes"
+    }
+}
+
+bootRun {
+    dependsOn "copyFrontend"
+    classpath(frontendBuildOutput)
 }
 
 
@@ -50,20 +59,26 @@ dependencies {
     implementation("org.apache.camel.springboot:camel-jackson3-starter:$camelVersion")
     implementation("org.apache.camel.springboot:camel-platform-http-starter:$camelVersion")
     implementation("org.apache.camel.springboot:camel-springdoc-starter:$camelVersion")
+    implementation("org.apache.camel.springboot:camel-bean-validator-starter:$camelVersion")
     implementation("org.apache.camel:camel-http:$camelVersion")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.apache.camel:camel-test-spring-junit5:$camelVersion")
 
-    implementation("org.mybatis.spring.boot:mybatis-spring-boot-starter:4.0.0")
+    implementation("org.mybatis.spring.boot:mybatis-spring-boot-starter:$mybatisVersion")
     implementation("org.springframework.boot:spring-boot-starter-liquibase")
 
     runtimeOnly("com.h2database:h2")
 
+    testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.mybatis.spring.boot:mybatis-spring-boot-starter-test:4.0.0")
+    testImplementation("org.mybatis.spring.boot:mybatis-spring-boot-starter-test:$mybatisVersion")
     testImplementation("org.apache.camel:camel-test-junit5")
     testImplementation("org.springframework.boot:spring-boot-starter-restclient-test")
+
+    testImplementation(platform("org.testcontainers:testcontainers-bom:2.0.2"))
+    testImplementation("org.testcontainers:testcontainers-junit-jupiter")
+    testImplementation("com.redis:testcontainers-redis")
 }
 
 

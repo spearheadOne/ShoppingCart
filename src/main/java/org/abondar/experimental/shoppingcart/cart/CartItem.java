@@ -1,12 +1,16 @@
 package org.abondar.experimental.shoppingcart.cart;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 public record CartItem(
-        String id,
+        UUID productId,
         String name,
-        BigDecimal price,
-        int quantity,
-        BigDecimal totalPrice
+        String imgUrl,
+        BigDecimal unitPrice,
+        int quantity
 ) {
+    public BigDecimal lineTotal() {
+        return unitPrice.multiply(BigDecimal.valueOf(quantity));
+    }
 }

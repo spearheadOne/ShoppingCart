@@ -1,6 +1,7 @@
 package org.abondar.experimental.shoppingcart.product;
 
 import lombok.RequiredArgsConstructor;
+import org.abondar.experimental.shoppingcart.util.UuidUtil;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -12,7 +13,7 @@ public class ProductService {
     private final ProductMapper productMapper;
 
     public ProductResponse getProductById(String id) {
-        var productId = parseUuid(id);
+        var productId = UuidUtil.parseUuid(id);
 
         var product = productMapper.findProductById(productId)
                 .orElseThrow(() -> new ProductNotFoundException(productId));
@@ -34,13 +35,6 @@ public class ProductService {
     }
 
 
-    private UUID parseUuid(String id) {
-        try {
-            return UUID.fromString(id);
-        } catch (IllegalArgumentException ex) {
-            throw new IllegalArgumentException("Invalid product id: " + id);
-        }
-    }
 
 
     private ProductResponse toResponse(Product product) {

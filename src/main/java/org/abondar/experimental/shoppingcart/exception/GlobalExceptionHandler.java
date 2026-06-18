@@ -2,17 +2,20 @@ package org.abondar.experimental.shoppingcart.exception;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import jakarta.validation.ConstraintViolationException;
+import org.abondar.experimental.shoppingcart.cart.CartItemNotFoundException;
+import org.abondar.experimental.shoppingcart.cart.CartNotFoundException;
+import org.abondar.experimental.shoppingcart.cart.InvalidCartItemException;
 import org.abondar.experimental.shoppingcart.product.ProductNotFoundException;
 import org.abondar.experimental.shoppingcart.product.ProductPaginationException;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteConfigurationBuilder;
+import org.apache.camel.component.bean.validator.BeanValidationException;
 import org.springframework.stereotype.Component;
 
 @Component
 public class GlobalExceptionHandler extends RouteConfigurationBuilder {
     @Override
-    public void configuration() throws Exception {
-        //TODO add custom exceptios
+    public void configuration() {
         var globalExceptionConfiguration = routeConfiguration();
 
         globalExceptionConfiguration.onException(ProductNotFoundException.class)
@@ -33,13 +36,40 @@ public class GlobalExceptionHandler extends RouteConfigurationBuilder {
                         exchange.getProperty(Exchange.EXCEPTION_CAUGHT, Exception.class).getMessage()
                 ));
 
-//
-//        onException(CartNotFoundException.class)
-//
-//                .handled(true)
-//                .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(404))
-//                .setHeader(Exchange.CONTENT_TYPE, constant("application/json"))
-//                .setBody(simple("{\"message\":\"${exception.message}\"}"));
+        globalExceptionConfiguration.onException(CartNotFoundException.class)
+                .handled(true)
+                .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(404))
+                .setHeader(Exchange.CONTENT_TYPE, constant("application/json"))
+                .setBody(exchange ->
+                        new ErrorResponse("CART_NOT_FOUND", exchange.getProperty(Exchange.EXCEPTION_CAUGHT,
+                                        Exception.class)
+                                .getMessage()));
+
+        globalExceptionConfiguration.onException(CartItemNotFoundException.class)
+                .handled(true)
+                .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(404))
+                .setHeader(Exchange.CONTENT_TYPE, constant("application/json"))
+                .setBody(exchange ->
+                        new ErrorResponse("CART_ITEM_NOT_FOUND", exchange.getProperty(Exchange.EXCEPTION_CAUGHT,
+                                        Exception.class)
+                                .getMessage()));
+
+
+        globalExceptionConfiguration.onException(InvalidCartItemException.class)
+                .handled(true)
+                .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(404))
+                .setHeader(Exchange.CONTENT_TYPE, constant("application/json"))
+                .setBody(exchange ->
+                        new ErrorResponse("BAD_REQUEST", exchange.getProperty(Exchange.EXCEPTION_CAUGHT,
+                                        Exception.class)
+                                .getMessage()));
+
+        globalExceptionConfiguration.onException(BeanValidationException.class)
+                .handled(true)
+                .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(400))
+                .setHeader(Exchange.CONTENT_TYPE, constant("application/json"))
+                .setBody(exchange -> new ErrorResponse("VALIDATION_ERROR",
+                        exchange.getProperty(Exchange.EXCEPTION_CAUGHT, Exception.class).getMessage()));
 
         globalExceptionConfiguration.onException(ConstraintViolationException.class)
                 .handled(true)

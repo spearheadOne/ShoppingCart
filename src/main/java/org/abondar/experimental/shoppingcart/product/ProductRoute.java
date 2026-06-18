@@ -19,10 +19,12 @@ public class ProductRoute extends RouteBuilder {
     @Override
     public void configure() throws Exception {
         from("direct:getProductById")
+                .routeId("getProductById")
                 .bean(productService, "getProductById(${header.id})");
 
 
         from("direct:getProducts")
+                .routeId("getProducts")
                 .process(exchange -> {
                     String limitHeader = exchange.getIn().getHeader("limit", String.class);
                     String offsetHeader = exchange.getIn().getHeader("offset", String.class);
