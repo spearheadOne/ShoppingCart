@@ -1,0 +1,8 @@
+.notification {
+    position: fixed;
+    z-index: 30;
+    top: 88px;
+    right: 24px;
+    width: min(420px, calc(100vw - 48px));
+    box-shadow: 0 14px 40px rgba(28, 49, 36, 0.18);
+}

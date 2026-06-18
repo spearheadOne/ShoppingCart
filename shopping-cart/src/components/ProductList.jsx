@@ -1,32 +1,28 @@
-import React from "react"
-
-import Product from "./Product"
-import "../stylesheets/ProductList.css"
+import Product from "./Product";
 import cartStore from "../store/cart-store";
+import "../stylesheets/ProductList.css";
 
 function ProductList() {
+    const products = cartStore((state) => state.products);
+    const productsLoading = cartStore((state) => state.productsLoading);
 
-     let products = cartStore(state => state.products);
-   
-     
-    const renderedProducts = products.map((product, id) => (
-        <li key={id}>
-            <Product
-                id={product.id}
-                name={product.name}
-                imgUrl={product.imgURL}
-                price={product.price}
-            />
-        </li>
-    ));
+    if (productsLoading) {
+        return <div className="catalog-state">Loading products…</div>;
+    }
+
+    if (!products.length) {
+        return <div className="catalog-state">No products are available.</div>;
+    }
 
     return (
-        <div>
-            <ul className="product-list">
-                {renderedProducts}
-            </ul>
-        </div>
-    )
+        <ul className="product-list">
+            {products.map((product) => (
+                <li key={product.id}>
+                    <Product {...product} imgUrl={product.imgURL} />
+                </li>
+            ))}
+        </ul>
+    );
 }
 
 export default ProductList;

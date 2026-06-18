@@ -1,35 +1,81 @@
 .product-card {
-    width: 250px;
-    height: 350px;
     display: flex;
-    padding: 10px;
+    height: 100%;
+    min-height: 340px;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 5px 5px 10px #ccc;
-}
-
-
-.product-card img {
-    width: 90%;
-    height: 40%;
-}
-
-.product-card > p {
-    padding: 10px;
-    font-size: 20px;
+    overflow: hidden;
+    border: 1px solid #e0e4dc;
+    border-radius: 22px;
+    background: #fafbf8;
+    box-shadow: 0 14px 40px rgba(45, 60, 49, 0.06);
+    transition: transform 160ms ease, box-shadow 160ms ease;
 }
 
 .product-card:hover {
-    box-shadow: 10px 10px 20px #ccc;
+    transform: translateY(-3px);
+    box-shadow: 0 18px 48px rgba(45, 60, 49, 0.11);
+}
+
+.product-image-wrap {
+    position: relative;
+    height: 210px;
+    padding: 18px;
+    background: #e9ece4;
+}
+
+.product-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    mix-blend-mode: multiply;
+}
+
+.in-cart-badge {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    padding: 7px 10px;
+    border-radius: 999px;
+    color: #fff;
+    background: #213d2d;
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+.product-info {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 20px 20px 16px;
+}
+
+.product-info h2,
+.product-info p {
+    margin: 0;
+}
+
+.product-info h2 {
+    font-size: 1.05rem;
+}
+
+.product-info p {
+    color: #526159;
+    font-weight: 800;
 }
 
 .product-button {
-    margin-top: 10px;
-    margin-bottom: auto;
-    padding: 10px;
-    color: white;
-    border: none;
-    cursor: pointer;
-    background-color: rgba(21, 26, 42, 0.787);
+    margin: auto 20px 20px;
+    padding: 12px 16px;
+    border: 1px solid #213d2d;
+    border-radius: 12px;
+    color: #213d2d;
+    background: transparent;
+    font-weight: 800;
+    transition: color 150ms ease, background 150ms ease;
+}
+
+.product-button:hover:not(:disabled) {
+    color: #fff;
+    background: #213d2d;
 }

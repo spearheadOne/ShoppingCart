@@ -1,34 +1,17 @@
-import React from "react";
-
-import "../stylesheets/Notification.css"
-import { Alert } from "@mui/material"
+import { Alert } from "@mui/material";
 import cartStore from "../store/cart-store";
+import "../stylesheets/Notification.css";
 
-
-function Notification(props) {
-    const notification = cartStore(state => state.notification)
-    const showNotification = cartStore(state => state.showNotification)
-
-    function handleClose(){
-        showNotification({
-            open:false
-        });
-    }
-
+function Notification({ type, message }) {
+    const showNotification = cartStore((state) => state.showNotification);
 
     return (
-        <div>
-
-            {
-                notification.open && 
-                
-                <Alert severity={props.type} onClose={handleClose}>
-                    {props.message}
-                </Alert>
-            }
-
+        <div className="notification">
+            <Alert severity={type} onClose={() => showNotification({ open: false })}>
+                {message}
+            </Alert>
         </div>
-    )
+    );
 }
 
 export default Notification;

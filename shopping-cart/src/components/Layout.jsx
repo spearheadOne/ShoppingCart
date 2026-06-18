@@ -1,37 +1,37 @@
-import React from "react";
-import Header from "./Header"
+import Header from "./Header";
 import ProductList from "./ProductList";
-import CartItemList from "./CartItemList"
-import cartStore from "../store/cart-store";
-
-import "../stylesheets/Layout.css"
+import CartItemList from "./CartItemList";
+import "../stylesheets/Layout.css";
 
 function Layout() {
-    let total = 0;
-    const items = cartStore(state => state.cart.items);
-
-    items.forEach(item => {
-        total += item.totalPrice;
-    })
-
-    const showCart = cartStore(state => state.cart.showCart);
-
     return (
-        <React.Fragment>
-            <div className="layout">
-                <Header />
-                <ProductList />
-                {showCart && <CartItemList />}
-                <div className="layout-price">
-                    <h3>Total: ${total}</h3>
-                    <button className="layout-order">Order</button>
-                </div>
+        <div className="app-shell">
+            <Header />
+            <main className="layout">
+                <section className="cart-panel" aria-labelledby="cart-workspace-title">
+                    <div className="section-heading">
+                        <div>
+                            <span className="eyebrow">Cart management</span>
+                            <h1 id="cart-workspace-title">Review your cart</h1>
+                        </div>
+                        <p>Review contents, set exact quantities, remove items, or delete the cart.</p>
+                    </div>
+                    <CartItemList />
+                </section>
 
-            </div>
-        </React.Fragment>
-
-    )
+                <section className="catalog-panel" aria-labelledby="catalog-title">
+                    <div className="section-heading catalog-heading">
+                        <div>
+                            <span className="eyebrow">Demo catalog</span>
+                            <h2 id="catalog-title">Add products</h2>
+                        </div>
+                        <p>The catalog is kept separate from your active cart.</p>
+                    </div>
+                    <ProductList />
+                </section>
+            </main>
+        </div>
+    );
 }
-
 
 export default Layout;
