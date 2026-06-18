@@ -17,6 +17,6 @@ public class RestRouteConfig extends RouteBuilder {
                 .apiProperty("api.version", "v1")
                 .component("platform-http")
                 .clientRequestValidation(true)
-                .bindingMode(RestBindingMode.auto);
+                .bindingMode(RestBindingMode.json);
     }
 }
