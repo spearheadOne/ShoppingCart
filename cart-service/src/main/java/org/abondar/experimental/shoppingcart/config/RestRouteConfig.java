@@ -12,7 +12,7 @@ public class RestRouteConfig extends RouteBuilder {
 
         restConfiguration()
                 .contextPath("/api")
-                .apiProperty("api.title", "Shopping Cart backend")
+                .apiProperty("api.title", "Cart service")
                 .apiProperty("api.version", "v1")
                 .component("platform-http")
                 .clientRequestValidation(true)

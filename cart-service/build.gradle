@@ -28,7 +28,7 @@ bootRun {
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
-    implementation("org.springframework.boot:spring-boot-starter-restclient")
+
 
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.apache.camel:camel-test-junit5")
