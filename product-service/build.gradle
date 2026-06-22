@@ -30,8 +30,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-liquibase")
 
     implementation("org.mybatis.spring.boot:mybatis-spring-boot-starter:$mybatisVersion")
+    implementation("org.apache.camel.springboot:camel-mybatis-starter:$camelVersion")
     runtimeOnly("com.h2database:h2")
-
+    testImplementation("org.apache.camel:camel-mock:$camelVersion")
     testImplementation("org.mybatis.spring.boot:mybatis-spring-boot-starter-test:$mybatisVersion")
 }
 
