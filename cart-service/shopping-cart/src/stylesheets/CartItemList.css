@@ -70,17 +70,6 @@
     background: transparent;
 }
 
-.cart-id {
-    overflow: hidden;
-    margin: 0;
-    padding: 0 28px 22px;
-    color: #9fac9f;
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 0.64rem;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
 .cart-item-ul {
     display: flex;
     max-height: 540px;

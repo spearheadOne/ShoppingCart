@@ -63,7 +63,7 @@ describe("CartItemList", () => {
 
         render(<CartItemList />);
 
-        expect(screen.getByText("ID: cart-1")).toBeInTheDocument();
+        expect(screen.queryByText(/cart-1/)).not.toBeInTheDocument();
         expect(screen.getByRole("heading", { name: "Keyboard" })).toBeInTheDocument();
         expect(screen.getAllByText("$199.98")).toHaveLength(2);
 

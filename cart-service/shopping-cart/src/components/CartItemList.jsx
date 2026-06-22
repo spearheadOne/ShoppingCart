@@ -58,8 +58,6 @@ function CartItemList() {
             </div>
             )}
 
-            {cart.id && <p className="cart-id">ID: {cart.id}</p>}
-
             {cartLoading ? (
                 <div className="cart-state">Loading cart…</div>
             ) : !cart.id ? (
