@@ -6,16 +6,13 @@ import cartStore from "../store/cart-store";
 
 describe("CartItemList", () => {
     const originalActions = {
-        createCart: cartStore.getState().createCart,
         deleteCart: cartStore.getState().deleteCart,
         fetchCartData: cartStore.getState().fetchCartData
     };
-    let createCart;
     let deleteCart;
     let fetchCartData;
 
     beforeEach(() => {
-        createCart = vi.fn();
         deleteCart = vi.fn().mockResolvedValue(undefined);
         fetchCartData = vi.fn();
         cartStore.setState({
@@ -28,7 +25,6 @@ describe("CartItemList", () => {
             cartLoading: false,
             deletingCart: false,
             pendingItems: {},
-            createCart,
             deleteCart,
             fetchCartData
         });
@@ -39,13 +35,12 @@ describe("CartItemList", () => {
         cartStore.setState(originalActions);
     });
 
-    it("creates a cart from the no-active-cart state", async () => {
-        const user = userEvent.setup();
+    it("does not offer manual cart creation", () => {
         render(<CartItemList />);
 
         expect(screen.getByText("No active cart")).toBeInTheDocument();
-        await user.click(screen.getByRole("button", { name: "Create cart" }));
-        expect(createCart).toHaveBeenCalledOnce();
+        expect(screen.getByText("Add a product to create a cart.")).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Create cart" })).not.toBeInTheDocument();
     });
 
     it("renders items and totals and refreshes the cart", async () => {

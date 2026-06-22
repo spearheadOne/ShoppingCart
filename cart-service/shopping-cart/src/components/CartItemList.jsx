@@ -9,7 +9,6 @@ function CartItemList() {
     const cartLoading = cartStore((state) => state.cartLoading);
     const deletingCart = cartStore((state) => state.deletingCart);
     const deleteCart = cartStore((state) => state.deleteCart);
-    const createCart = cartStore((state) => state.createCart);
     const fetchCartData = cartStore((state) => state.fetchCartData);
 
     return (
@@ -66,8 +65,7 @@ function CartItemList() {
             ) : !cart.id ? (
                 <div className="cart-state">
                     <h3>No active cart</h3>
-                    <p>Create a new cart to continue shopping.</p>
-                    <button className="primary-button" onClick={createCart}>Create cart</button>
+                    <p>Add a product to create a cart.</p>
                 </div>
             ) : cart.items.length === 0 ? (
                 <div className="cart-state empty-cart">

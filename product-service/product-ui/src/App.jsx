@@ -8,6 +8,7 @@ function App() {
     const fetchCart = productStore((state) => state.fetchCart);
     const notification = productStore((state) => state.notification);
     const clearNotification = productStore((state) => state.clearNotification);
+    const clearCart = productStore((state) => state.clearCart);
 
     useEffect(() => {
         fetchProducts();
@@ -17,14 +18,20 @@ function App() {
 
     useEffect(() => {
         const synchronizeCart = (event) => {
-            if (event.data?.type === "shopping-cart:state" && event.data.cartId) {
-                localStorage.setItem("shopping-cart-id", event.data.cartId);
-                fetchCart();
+            if (
+                ["shopping-cart:state", "shopping-cart:synchronize"]
+                    .includes(event.data?.type)
+                && event.data.cartId
+            ) {
+                fetchCart(event.data.cartId);
+            }
+            if (event.data?.type === "shopping-cart:cleared") {
+                clearCart();
             }
         };
         window.addEventListener("message", synchronizeCart);
         return () => window.removeEventListener("message", synchronizeCart);
-    }, [fetchCart]);
+    }, [clearCart, fetchCart]);
 
     return (
         <div className="catalog-shell">

@@ -6,39 +6,55 @@ import cartStore from "./store/cart-store";
 function App() {
     const notification = cartStore((state) => state.notification);
     const fetchCartData = cartStore((state) => state.fetchCartData);
-    const cartId = cartStore((state) => state.cart.id);
+    const synchronizeCart = cartStore((state) => state.synchronizeCart);
+    const cart = cartStore((state) => state.cart);
 
     useEffect(() => {
-        fetchCartData();
+        if (window.parent === window) {
+            fetchCartData();
+            return;
+        }
+
+        window.parent.postMessage({ type: "shopping-cart:request-state" }, "*");
+        const initialLoad = window.setTimeout(() => {
+            if (!cartStore.getState().cart.id) {
+                fetchCartData();
+            }
+        }, 500);
+
+        return () => window.clearTimeout(initialLoad);
     }, [fetchCartData]);
 
     useEffect(() => {
         const refreshCart = (event) => {
-            if (event.data?.type === "shopping-cart:changed") {
-                if (event.data.cartId) {
-                    localStorage.setItem("shopping-cart-id", event.data.cartId);
-                }
-                fetchCartData();
+            if (
+                ["shopping-cart:changed", "shopping-cart:synchronize"]
+                    .includes(event.data?.type)
+                && event.data.cartId
+            ) {
+                synchronizeCart(event.data.cartId);
             }
-            if (event.data?.type === "shopping-cart:request-state" && cartId) {
+            if (event.data?.type === "shopping-cart:request-state") {
+                const currentCartId = cartStore.getState().cart.id;
+                if (!currentCartId) return;
                 window.parent.postMessage({
                     type: "shopping-cart:state",
-                    cartId
+                    cartId: currentCartId
                 }, "*");
             }
         };
         window.addEventListener("message", refreshCart);
         return () => window.removeEventListener("message", refreshCart);
-    }, [cartId, fetchCartData]);
+    }, [synchronizeCart]);
 
     useEffect(() => {
-        if (cartId) {
+        if (cart.id) {
             window.parent.postMessage({
                 type: "shopping-cart:state",
-                cartId
+                cartId: cart.id
             }, "*");
         }
-    }, [cartId]);
+    }, [cart]);
 
     return (
         <>

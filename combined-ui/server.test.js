@@ -29,3 +29,17 @@ test("creates an Express application with the combined UI entry point", () => {
     assert.match(index, /\/config\.js/);
     assert.match(index, /\/app\.js/);
 });
+
+test("combined UI script retains and replays cart synchronization state", () => {
+    const script = fs.readFileSync(
+        path.join(__dirname, "public", "app.js"),
+        "utf8"
+    );
+
+    assert.match(script, /shopping-cart:synchronize/);
+    assert.match(script, /shopping-cart:cleared/);
+    assert.match(script, /addEventListener\("load"/);
+    assert.match(script, /localStorage\.setItem/);
+    assert.doesNotMatch(script, /cart-link|product-link/);
+    assert.doesNotMatch(script, /setInterval/);
+});

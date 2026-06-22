@@ -11,7 +11,9 @@ function Product({ id, name, imgUrl, price }) {
     return (
         <article className="product-card">
             <div className="product-image-wrap">
-                <img src={imgUrl} alt="" />
+                <span className="product-image-placeholder" aria-hidden="true">
+                    {name.slice(0, 2).toUpperCase()}
+                </span>
                 {quantity > 0 && <span className="in-cart-badge">{quantity} in cart</span>}
             </div>
             <div className="product-info">

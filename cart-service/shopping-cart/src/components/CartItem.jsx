@@ -22,7 +22,9 @@ function CartItem({ id, name, imgURL, price, quantity, totalPrice }) {
 
     return (
         <article className="cart-item">
-            <img src={imgURL} alt="" />
+            <span className="cart-item-image-placeholder" aria-hidden="true">
+                {name.slice(0, 2).toUpperCase()}
+            </span>
             <div className="cart-item-details">
                 <h3>{name}</h3>
                 <span>${price.toFixed(2)} each</span>

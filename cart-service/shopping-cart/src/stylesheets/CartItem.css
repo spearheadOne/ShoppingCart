@@ -7,13 +7,17 @@
     background: #294735;
 }
 
-.cart-item > img {
+.cart-item-image-placeholder {
+    display: grid;
     width: 64px;
     height: 64px;
-    padding: 6px;
+    place-items: center;
     border-radius: 12px;
-    object-fit: contain;
     background: #edf0e9;
+    color: #526159;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.15rem;
+    font-weight: 700;
 }
 
 .cart-item-details {
@@ -120,7 +124,7 @@
         padding: 16px;
     }
 
-    .cart-item > img {
+    .cart-item-image-placeholder {
         width: 52px;
         height: 52px;
     }

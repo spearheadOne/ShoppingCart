@@ -5,7 +5,8 @@ import cartStore from "./store/cart-store";
 
 describe("App", () => {
     const originalActions = {
-        fetchCartData: cartStore.getState().fetchCartData
+        fetchCartData: cartStore.getState().fetchCartData,
+        synchronizeCart: cartStore.getState().synchronizeCart
     };
 
     afterEach(() => {
@@ -51,5 +52,27 @@ describe("App", () => {
         render(<App />);
 
         expect(screen.getByText("Cart failed to load.")).toBeInTheDocument();
+    });
+
+    it("refreshes the cart when the combined UI synchronizes a cart id", async () => {
+        const synchronizeCart = vi.fn();
+        cartStore.setState({
+            fetchCartData: vi.fn(),
+            synchronizeCart,
+            notification: null,
+            cartLoading: false
+        });
+
+        render(<App />);
+        window.dispatchEvent(new MessageEvent("message", {
+            data: {
+                type: "shopping-cart:synchronize",
+                cartId: "cart-2"
+            }
+        }));
+
+        await waitFor(() => {
+            expect(synchronizeCart).toHaveBeenCalledWith("cart-2");
+        });
     });
 });

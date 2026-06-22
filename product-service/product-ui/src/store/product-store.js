@@ -31,6 +31,11 @@ const productStore = create((set, get) => ({
 
     clearNotification: () => set({ notification: null }),
 
+    clearCart: () => {
+        localStorage.removeItem(CART_ID_KEY);
+        set({ cart: emptyCart });
+    },
+
     fetchProducts: async () => {
         set({ productsLoading: true });
         try {
@@ -49,12 +54,13 @@ const productStore = create((set, get) => ({
         }
     },
 
-    fetchCart: async () => {
-        const cartId = localStorage.getItem(CART_ID_KEY);
+    fetchCart: async (requestedCartId) => {
+        const cartId = requestedCartId || localStorage.getItem(CART_ID_KEY);
         if (!cartId) return;
 
         try {
             const { data } = await cartClient.get(`/carts/${cartId}`);
+            localStorage.setItem(CART_ID_KEY, cartId);
             set({ cart: mapCart(data) });
         } catch {
             localStorage.removeItem(CART_ID_KEY);

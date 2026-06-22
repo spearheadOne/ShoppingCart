@@ -71,19 +71,12 @@ describe("cart store API integration", () => {
         });
     });
 
-    it("creates a cart with an explicit JSON body", async () => {
-        requestMock.mockResolvedValueOnce(apiResponse(emptyCartResponse, 201));
+    it("does not create a cart when no persisted cart exists", async () => {
+        await cartStore.getState().fetchCartData();
 
-        const cartId = await cartStore.getState().createCart();
-
-        expect(requestMock).toHaveBeenCalledWith({
-            url: "/carts",
-            method: "POST",
-            data: {}
-        });
-        expect(cartId).toBe("cart-1");
-        expect(cartStore.getState().cart.id).toBe("cart-1");
-        expect(localStorage.getItem("shopping-cart-id")).toBe("cart-1");
+        expect(requestMock).not.toHaveBeenCalled();
+        expect(cartStore.getState().cart.id).toBeNull();
+        expect(cartStore.getState().cartLoading).toBe(false);
     });
 
     it("reads a saved cart", async () => {
@@ -104,6 +97,17 @@ describe("cart store API integration", () => {
             quantity: 2,
             price: 99.99
         });
+    });
+
+    it("synchronizes an explicit cart id from the combined UI", async () => {
+        requestMock.mockResolvedValueOnce(apiResponse(cartWithKeyboard(3)));
+
+        const found = await cartStore.getState().synchronizeCart("cart-1");
+
+        expect(found).toBe(true);
+        expect(requestMock).toHaveBeenCalledWith({ url: "/carts/cart-1" });
+        expect(localStorage.getItem("shopping-cart-id")).toBe("cart-1");
+        expect(cartStore.getState().cart.itemsTotal).toBe(3);
     });
 
     it("sets an exact item quantity", async () => {
@@ -134,6 +138,7 @@ describe("cart store API integration", () => {
     });
 
     it("deletes the active cart and clears its persisted id", async () => {
+        const postMessage = vi.spyOn(window.parent, "postMessage");
         cartStore.getState().replaceCartData(cartWithKeyboard());
         requestMock.mockResolvedValueOnce(apiResponse(null, 204));
 
@@ -154,5 +159,10 @@ describe("cart store API integration", () => {
             message: "Cart deleted.",
             type: "success"
         });
+        expect(postMessage).toHaveBeenCalledWith(
+            { type: "shopping-cart:cleared" },
+            "*"
+        );
+        postMessage.mockRestore();
     });
 });

@@ -13,6 +13,10 @@ function createApp({
     const publicDir = path.join(__dirname, "public");
 
     app.disable("x-powered-by");
+    app.use((request, response, next) => {
+        response.set("Cache-Control", "no-store");
+        next();
+    });
 
     app.get("/health", (request, response) => {
         response.json({ status: "UP" });

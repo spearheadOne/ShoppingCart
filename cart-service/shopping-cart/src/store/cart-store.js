@@ -7,7 +7,7 @@ import {
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api/v1";
 const CART_ID_KEY = "shopping-cart-id";
-let cartCreationPromise = null;
+let cartGeneration = 0;
 
 const apiClient = axios.create({
     baseURL: API_BASE_URL,
@@ -79,59 +79,45 @@ const cartStore = create((set, get) => ({
         }));
     },
 
-    createCart: async () => {
-        if (cartCreationPromise) {
-            return cartCreationPromise;
-        }
-
+    fetchCartById: async (cartId) => {
+        const generation = ++cartGeneration;
         set({ cartLoading: true });
-        cartCreationPromise = (async () => {
-            try {
-                const cartData = await apiRequest("/carts", {
-                    method: "POST",
-                    data: {}
-                });
-                get().replaceCartData(cartData);
-                return cartData.cartId;
-            } catch (error) {
-                get().showNotification({
-                    message: "Could not create a cart. Please try again.",
-                    type: "error"
-                });
+        try {
+            const cartData = await apiRequest(`/carts/${cartId}`);
+            if (generation !== cartGeneration) {
                 return null;
-            } finally {
-                cartCreationPromise = null;
-                set({ cartLoading: false });
             }
-        })();
-
-        return cartCreationPromise;
+            get().replaceCartData(cartData);
+            return true;
+        } catch (error) {
+            if (generation !== cartGeneration) {
+                return null;
+            }
+            localStorage.removeItem(CART_ID_KEY);
+            return false;
+        } finally {
+            set({ cartLoading: false });
+        }
     },
 
-    ensureCart: async () => {
-        if (get().cart.id) {
-            return get().cart.id;
-        }
-        return get().createCart();
+    synchronizeCart: async (cartId) => {
+        if (!cartId) return false;
+
+        localStorage.setItem(CART_ID_KEY, cartId);
+        return get().fetchCartById(cartId);
     },
 
     fetchCartData: async () => {
-        set({ cartLoading: true });
         const cartId = localStorage.getItem(CART_ID_KEY);
 
         if (!cartId) {
-            await get().createCart();
+            set({ cart: emptyCart, cartLoading: false });
             return;
         }
 
-        try {
-            const cartData = await apiRequest(`/carts/${cartId}`);
-            get().replaceCartData(cartData);
-        } catch (error) {
-            localStorage.removeItem(CART_ID_KEY);
-            await get().createCart();
-        } finally {
-            set({ cartLoading: false });
+        const found = await get().fetchCartById(cartId);
+        if (found === false) {
+            set({ cart: emptyCart, cartLoading: false });
         }
     },
 
@@ -146,6 +132,10 @@ const cartStore = create((set, get) => ({
                 data: parseCartItemUpdateQuantityRequest({ quantity })
             });
             get().replaceCartData(cartData);
+            window.parent.postMessage({
+                type: "shopping-cart:changed",
+                cartId
+            }, "*");
         } catch (error) {
             get().showNotification({
                 message: "Could not update the item quantity.",
@@ -164,6 +154,10 @@ const cartStore = create((set, get) => ({
                 { method: "DELETE" }
             );
             get().replaceCartData(cartData);
+            window.parent.postMessage({
+                type: "shopping-cart:changed",
+                cartId: cartData.cartId
+            }, "*");
         } catch (error) {
             get().showNotification({
                 message: "Could not remove the item from your cart.",
@@ -183,6 +177,7 @@ const cartStore = create((set, get) => ({
             await apiRequest(`/carts/${cartId}`, { method: "DELETE" });
             localStorage.removeItem(CART_ID_KEY);
             set({ cart: emptyCart });
+            window.parent.postMessage({ type: "shopping-cart:cleared" }, "*");
             get().showNotification({
                 message: "Cart deleted.",
                 type: "success"
