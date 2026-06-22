@@ -1,0 +1,43 @@
+def frontendDir = file("shopping-cart")
+def frontendBuildOutput = layout.buildDirectory.dir("frontend")
+def npmExecutable = providers.environmentVariable("NPM_EXECUTABLE")
+        .orElse(file("/opt/homebrew/bin/npm").exists() ? "/opt/homebrew/bin/npm" : "npm")
+
+tasks.register("npmBuild", Exec) {
+    workingDir frontendDir
+    commandLine npmExecutable.get(), "run", "build"
+}
+
+tasks.register("copyFrontend", Copy) {
+    dependsOn "npmBuild"
+    into frontendBuildOutput.map { it.dir("static") }
+    from "$frontendDir/dist"
+}
+
+bootJar {
+    dependsOn "copyFrontend"
+    from(frontendBuildOutput) {
+        into "BOOT-INF/classes"
+    }
+}
+
+bootRun {
+    dependsOn "copyFrontend"
+    classpath(frontendBuildOutput)
+}
+
+dependencies {
+    implementation("org.springframework.boot:spring-boot-starter-data-redis")
+    implementation("org.springframework.boot:spring-boot-starter-restclient")
+
+    testImplementation("org.springframework.boot:spring-boot-testcontainers")
+    testImplementation("org.apache.camel:camel-test-junit5")
+
+    testImplementation(platform("org.testcontainers:testcontainers-bom:2.0.2"))
+    testImplementation("org.testcontainers:testcontainers-junit-jupiter")
+    testImplementation("com.redis:testcontainers-redis")
+}
+
+bootBuildImage {
+    imageName = "abondar/shopping-cart"
+}

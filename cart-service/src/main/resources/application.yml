@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: ShoppingCart
+
+  main:
+    banner-mode: "console"
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always
+      status:
+        order: DOWN,OUT_OF_SERVICE,UP
+
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+
+services:
+  product:
+    base-url: ${PRODUCT_SERVICE_URL:http://localhost:8081/api}
+

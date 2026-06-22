@@ -1,91 +1,75 @@
 plugins {
-    id "java"
-    id "idea"
-    id "org.springframework.boot" version "4.0.6"
-    id("io.spring.dependency-management") version "1.1.7"
-    id "io.freefair.lombok" version "9.5.0"
+    id "base"
+    id "org.springframework.boot" version "4.0.6" apply false
+    id "io.spring.dependency-management" version "1.1.7" apply false
+    id "io.freefair.lombok" version "9.5.0" apply false
 }
 
 group "org.abondar.experimental.shoppingcart"
-version '2.0'
+version "2.0"
 
+def serviceProjects = [
+        project(":cart-service"),
+        project(":product-service")
+]
 
-java {
+configure(serviceProjects) {
+    apply plugin: "java"
+    apply plugin: "idea"
+    apply plugin: "org.springframework.boot"
+    apply plugin: "io.spring.dependency-management"
+    apply plugin: "io.freefair.lombok"
 
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(25)
+    group = rootProject.group
+    version = rootProject.version
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(25)
+        }
+    }
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        implementation(project(":shared"))
+
+        implementation("org.springframework.boot:spring-boot-starter-web")
+        implementation("org.springframework.boot:spring-boot-starter-actuator")
+        implementation("org.springframework.boot:spring-boot-starter-validation")
+
+        implementation("org.apache.camel.springboot:camel-spring-boot-starter:$camelVersion")
+        implementation("org.apache.camel.springboot:camel-jackson3-starter:$camelVersion")
+        implementation("org.apache.camel.springboot:camel-platform-http-starter:$camelVersion")
+        implementation("org.apache.camel.springboot:camel-springdoc-starter:$camelVersion")
+        implementation("org.apache.camel.springboot:camel-bean-validator-starter:$camelVersion")
+
+        testImplementation("org.springframework.boot:spring-boot-starter-test")
+        testImplementation("org.springframework.boot:spring-boot-starter-restclient-test")
+        testImplementation("org.apache.camel:camel-test-spring-junit5:$camelVersion")
+    }
+
+    tasks.named("test") {
+        useJUnitPlatform()
     }
 }
 
-repositories {
-    mavenCentral()
+tasks.named("build") {
+    dependsOn(
+            ":shared:build",
+            ":cart-service:build",
+            ":product-service:build"
+    )
 }
 
-def frontendDir = file("shopping-cart")
-def frontendBuildOutput = layout.buildDirectory.dir("frontend")
-
-tasks.register("npmBuild", Exec) {
-    workingDir frontendDir
-    commandLine "npm", "run", "build"
-}
-
-tasks.register("copyFrontend", Copy) {
-    dependsOn "npmBuild"
-    from "$frontendDir/dist"
-    into frontendBuildOutput.map { it.dir("static") }
-}
-
-bootJar {
-    dependsOn "copyFrontend"
-    from(frontendBuildOutput) {
-        into "BOOT-INF/classes"
-    }
-}
-
-bootRun {
-    dependsOn "copyFrontend"
-    classpath(frontendBuildOutput)
-}
-
-
-dependencies {
-
-    implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation("org.springframework.boot:spring-boot-starter-actuator")
-    implementation("org.springframework.boot:spring-boot-starter-validation")
-    implementation("org.springframework.boot:spring-boot-starter-data-redis")
-
-    implementation("org.apache.camel.springboot:camel-spring-boot-starter:$camelVersion")
-    implementation("org.apache.camel.springboot:camel-jackson3-starter:$camelVersion")
-    implementation("org.apache.camel.springboot:camel-platform-http-starter:$camelVersion")
-    implementation("org.apache.camel.springboot:camel-springdoc-starter:$camelVersion")
-    implementation("org.apache.camel.springboot:camel-bean-validator-starter:$camelVersion")
-    implementation("org.apache.camel:camel-http:$camelVersion")
-
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.apache.camel:camel-test-spring-junit5:$camelVersion")
-
-    implementation("org.mybatis.spring.boot:mybatis-spring-boot-starter:$mybatisVersion")
-    implementation("org.springframework.boot:spring-boot-starter-liquibase")
-
-    runtimeOnly("com.h2database:h2")
-
-    testImplementation("org.springframework.boot:spring-boot-testcontainers")
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.mybatis.spring.boot:mybatis-spring-boot-starter-test:$mybatisVersion")
-    testImplementation("org.apache.camel:camel-test-junit5")
-    testImplementation("org.springframework.boot:spring-boot-starter-restclient-test")
-
-    testImplementation(platform("org.testcontainers:testcontainers-bom:2.0.2"))
-    testImplementation("org.testcontainers:testcontainers-junit-jupiter")
-    testImplementation("com.redis:testcontainers-redis")
-}
-
-
-tasks.named("test") {
-    useJUnitPlatform()
-}
-
-bootBuildImage {
-    imageName = "abondar/shoppingCart"
+tasks.register("test") {
+    group = "verification"
+    description = "Runs tests for all Gradle subprojects."
+    dependsOn(
+            ":shared:test",
+            ":cart-service:test",
+            ":product-service:test"
+    )
 }
