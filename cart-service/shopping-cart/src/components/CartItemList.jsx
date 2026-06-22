@@ -14,11 +14,8 @@ function CartItemList() {
 
     return (
         <div className="cart-item-list">
+            {cart.id && (
             <div className="cart-title-row">
-                <div>
-                    <span className="eyebrow">Active cart</span>
-                    <h2>Your cart</h2>
-                </div>
                 {cart.id && !confirmingDelete && (
                     <div className="cart-actions">
                         <button
@@ -60,6 +57,7 @@ function CartItemList() {
                     </div>
                 )}
             </div>
+            )}
 
             {cart.id && <p className="cart-id">ID: {cart.id}</p>}
 

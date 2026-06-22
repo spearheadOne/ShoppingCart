@@ -35,7 +35,7 @@ describe("App", () => {
         await waitFor(() => {
             expect(fetchCartData).toHaveBeenCalledOnce();
         });
-        expect(screen.getByText("Cart workspace")).toBeInTheDocument();
+        expect(screen.getByText("Shopping cart")).toBeInTheDocument();
     });
 
     it("renders the current notification", () => {

@@ -21,8 +21,8 @@ describe("Layout", () => {
 
         render(<Layout />);
 
-        const cartHeading = screen.getByRole("heading", { name: "Review your cart" });
-        expect(cartHeading).toBeInTheDocument();
+        expect(screen.getByRole("region", { name: "Shopping cart" })).toBeInTheDocument();
+        expect(screen.queryByRole("heading", { name: "Review your cart" })).not.toBeInTheDocument();
         expect(screen.queryByRole("heading", { name: "Add products" })).not.toBeInTheDocument();
         expect(screen.getByText("Your cart is empty")).toBeInTheDocument();
     });

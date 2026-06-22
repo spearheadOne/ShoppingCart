@@ -6,7 +6,7 @@ import cartStore from "../store/cart-store";
 describe("Header", () => {
     afterEach(cleanup);
 
-    it("renders branding and the cart summary", () => {
+    it("renders simplified branding and the cart summary", () => {
         cartStore.setState({
             cart: {
                 id: "cart-1",
@@ -18,8 +18,7 @@ describe("Header", () => {
 
         render(<Header />);
 
-        expect(screen.getByText("Cart workspace")).toBeInTheDocument();
-        expect(screen.getByText("Shopping cart API demo")).toBeInTheDocument();
+        expect(screen.getByText("Shopping cart")).toBeInTheDocument();
         expect(screen.getByLabelText("2 items in cart")).toBeInTheDocument();
     });
 });
