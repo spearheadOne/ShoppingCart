@@ -1,119 +1,111 @@
 package org.abondar.experimental.shoppingcart.cart;
 
-import org.apache.camel.CamelContext;
 import org.apache.camel.CamelExecutionException;
 import org.apache.camel.Exchange;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.component.bean.validator.BeanValidationException;
-import org.apache.camel.impl.DefaultCamelContext;
-import org.junit.jupiter.api.AfterEach;
+import org.apache.camel.spring.boot.CamelAutoConfiguration;
+import org.apache.camel.test.spring.junit5.CamelSpringBootTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
 
 
-@ExtendWith(MockitoExtension.class)
+@CamelSpringBootTest
+@SpringBootTest(
+        classes = CartRouteTest.TestApplication.class,
+        webEnvironment = SpringBootTest.WebEnvironment.NONE
+)
 public class CartRouteTest {
 
-    private static final String CART_ID = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
-
-    private static final String PRODUCT_ID = "11111111-1111-1111-1111-111111111111";
-
-    @Mock
-    private CartService cartService;
-
-
-    private CamelContext camelContext;
+    private static final UUID CART_ID = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+    private static final UUID PRODUCT_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
+    @Autowired
     private ProducerTemplate producerTemplate;
+    @Autowired
+    private TestCartStore cartStore;
 
     private static Stream<CartItemAddRequest> invalidAddRequests() {
         return Stream.of(
                 new CartItemAddRequest(null, 1),
                 new CartItemAddRequest("", 1),
                 new CartItemAddRequest("   ", 1),
-                new CartItemAddRequest(PRODUCT_ID, 0),
-                new CartItemAddRequest(PRODUCT_ID, -1)
+                new CartItemAddRequest(PRODUCT_ID.toString(), 0),
+                new CartItemAddRequest(PRODUCT_ID.toString(), -1)
         );
     }
 
     @BeforeEach
-    public void setUp() throws Exception {
-        camelContext = new DefaultCamelContext();
-        camelContext.addRoutes(new CartRoute(cartService));
-        camelContext.start();
-
-        producerTemplate = camelContext.createProducerTemplate();
+    public void clearStore() {
+        cartStore.clear();
     }
 
-    @AfterEach
-    public void tearDown() throws Exception {
-        if (producerTemplate != null) producerTemplate.stop();
-
-        if (camelContext != null) camelContext.stop();
-    }
 
     @Test
     public void createCart() {
-        var response = emptyCartResponse();
-
-        when(cartService.createCart()).thenReturn(response);
-
         var exchange = producerTemplate.request("direct:createCart", ignored -> {
         });
 
-        assertEquals(response, exchange.getIn().getBody(CartResponse.class));
         assertEquals(201, exchange.getIn().getHeader(Exchange.HTTP_RESPONSE_CODE, Integer.class));
-
-        verify(cartService, times(1)).createCart();
-        verifyNoMoreInteractions(cartService);
+        assertInstanceOf(CartResponse.class, exchange.getIn().getBody());
     }
 
     @Test
     public void getCart() {
-        var response = emptyCartResponse();
+        var cart = new Cart(CART_ID, List.of());
+        cartStore.setCart(cart);
 
-        when(cartService.getCart(CART_ID)).thenReturn(response);
-
-        var result = producerTemplate
+        var response = producerTemplate
                 .requestBodyAndHeader("direct:getCart", null, "id", CART_ID, CartResponse.class);
 
-        assertEquals(response, result);
-        verify(cartService, times(1)).getCart(CART_ID);
-        verifyNoMoreInteractions(cartService);
+        assertNotNull(response);
+        assertEquals(CART_ID.toString(), response.cartId());
     }
 
     @Test
     public void addCartItem() {
-        var request = new CartItemAddRequest(PRODUCT_ID, 2);
-        var response = cartResponse(2);
+        cartStore.setCart(new Cart(CART_ID, List.of()));
+        var request = new CartItemAddRequest(PRODUCT_ID.toString(), 2);
 
-        when(cartService.addCartItem(CART_ID, request))
-                .thenReturn(response);
-
-        var result = producerTemplate
+        var response = producerTemplate
                 .requestBodyAndHeader("direct:addCartItem", request, "id", CART_ID, CartResponse.class);
 
-        assertEquals(response, result);
-        verify(cartService, times(1)).addCartItem(CART_ID, request);
-        verifyNoMoreInteractions(cartService);
+        assertEquals(1, response.items().size());
+        assertEquals(2, response.items().getFirst().quantity());
+    }
+
+    @Test
+    public void addCartItemIncreasesExistingQuantity() {
+        cartStore.setCart(new Cart(CART_ID, List.of(cartItem(2))));
+
+        var request = new CartItemAddRequest(PRODUCT_ID.toString(), 2);
+
+        var response = producerTemplate
+                .requestBodyAndHeader("direct:addCartItem", request, "id", CART_ID, CartResponse.class);
+
+        assertEquals(1, response.items().size());
+        assertEquals(4, response.items().getFirst().quantity());
+        assertEquals(4, cartStore.getCart().items().getFirst().quantity());
     }
 
     @ParameterizedTest
@@ -129,19 +121,23 @@ public class CartRouteTest {
     @Test
     public void updateCartQuantity() {
         var request = new CartItemUpdateQuantityRequest(2);
-        var response = cartResponse(5);
+        cartStore.setCart(new Cart(CART_ID, List.of(cartItem(1))));
 
-        when(cartService.updateCartQuantity(CART_ID, PRODUCT_ID, request)).thenReturn(response);
+        var exchange = producerTemplate.request(
+                "direct:updateCartQuantity",
+                e -> {
+                    e.getMessage().setBody(request);
+                    e.getMessage().setHeader("id", CART_ID);
+                    e.getMessage().setHeader("productId", PRODUCT_ID.toString());
+                }
+        );
 
-        var result = producerTemplate.requestBodyAndHeaders("direct:updateCartQuantity", request,
-                Map.of(
-                        "id", CART_ID,
-                        "productId", PRODUCT_ID
-                ), CartResponse.class);
+        var response = exchange.getMessage().getBody(CartResponse.class);
 
-        assertEquals(response, result);
-        verify(cartService, times(1)).updateCartQuantity(CART_ID, PRODUCT_ID, request);
-        verifyNoMoreInteractions(cartService);
+       assertNotNull(response);
+       assertEquals(1, response.items().size());
+       assertEquals(2, response.items().getFirst().quantity());
+       assertEquals(2, cartStore.getCart().items().getFirst().quantity());
     }
 
     @ParameterizedTest
@@ -157,51 +153,64 @@ public class CartRouteTest {
                         ), CartResponse.class));
 
         assertEquals(BeanValidationException.class, exception.getCause().getClass());
-        verifyNoMoreInteractions(cartService);
     }
 
     @Test
     void deleteCartItem() {
-        var response = emptyCartResponse();
+        var item = cartItem(2);
+        var productId1 = UUID.fromString("22222-2222-2222-2222-222222222222");
+        var item1 = new CartItem(productId1, "test", "test", BigDecimal.ONE, 1);
 
-        when(cartService.deleteCartItem(CART_ID, PRODUCT_ID)).thenReturn(response);
+        cartStore.setCart(new Cart(CART_ID, List.of(item, item1)));
 
-        var result = producerTemplate.requestBodyAndHeaders("direct:deleteCartItem", null,
-                Map.of(
-                        "id", CART_ID,
-                        "productId", PRODUCT_ID
-                ),
-                CartResponse.class);
+        var exchange = producerTemplate.request(
+                "direct:deleteCartItem",
+                e -> {
+                    e.getMessage().setHeader("id", CART_ID);
+                    e.getMessage().setHeader(
+                            "productId",
+                            PRODUCT_ID.toString()
+                    );
+                }
+        );
 
-        assertEquals(response, result);
+       var response = exchange.getMessage().getBody(CartResponse.class);
 
-        verify(cartService, times(1)).deleteCartItem(CART_ID, PRODUCT_ID);
-        verifyNoMoreInteractions(cartService);
+       assertNotNull(response);
+       assertEquals(1, response.items().size());
+       assertEquals(productId1.toString(), response.items().getFirst().productId());
+       assertEquals(1,cartStore.getCart().items().size());
+       assertEquals(productId1,cartStore.getCart().items().getFirst().productId());
     }
 
     @Test
     public void deleteCart() {
+        cartStore.setCart(new Cart(CART_ID, List.of()));
+
         var exchange = producerTemplate.request("direct:deleteCart",
                 current -> current.getMessage().setHeader("id", CART_ID)
         );
 
         assertEquals(204, exchange.getMessage().getHeader(Exchange.HTTP_RESPONSE_CODE, Integer.class));
         assertNull(exchange.getMessage().getBody());
-
-        verify(cartService).deleteCart(CART_ID);
-        verifyNoMoreInteractions(cartService);
+        assertNull(cartStore.getCart());
     }
 
-    private CartResponse emptyCartResponse() {
-        return new CartResponse(CART_ID, List.of(), 0, BigDecimal.ZERO);
+    private CartItem cartItem(int quantity) {
+        return new CartItem(PRODUCT_ID, "test", "test", new BigDecimal("10.00"), quantity);
     }
 
-    private CartResponse cartResponse(int quantity) {
-        var unitPrice = new BigDecimal("10.00");
-        var lineTotal = unitPrice.multiply(BigDecimal.valueOf(quantity));
-
-        var item = new CartItemResponse(PRODUCT_ID, "test", "test", unitPrice, quantity, lineTotal);
-
-        return new CartResponse(CART_ID, List.of(item), quantity, lineTotal);
+    @SpringBootConfiguration
+    @EnableAutoConfiguration
+    @Import({
+            CartRoute.class,
+            CartService.class,
+            CartResponseMapper.class,
+            TestCartStore.class,
+            TestRoutes.class
+    })
+    @ImportAutoConfiguration(CamelAutoConfiguration.class)
+    static class TestApplication {
     }
+
 }

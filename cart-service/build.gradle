@@ -27,8 +27,8 @@ bootRun {
 }
 
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-data-redis")
-
+    implementation("org.apache.camel.springboot:camel-spring-redis-starter:$camelVersion")
+    implementation("org.apache.camel.springboot:camel-http-starter:$camelVersion")
 
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.apache.camel:camel-test-junit5")
@@ -36,6 +36,8 @@ dependencies {
     testImplementation(platform("org.testcontainers:testcontainers-bom:2.0.2"))
     testImplementation("org.testcontainers:testcontainers-junit-jupiter")
     testImplementation("com.redis:testcontainers-redis")
+    testImplementation("org.wiremock:wiremock-standalone:3.13.2")
+    testImplementation("org.apache.camel:camel-test-spring-junit5")
 }
 
 bootBuildImage {

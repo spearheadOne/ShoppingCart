@@ -1,64 +1,96 @@
 package org.abondar.experimental.shoppingcart.cart;
 
+import com.github.tomakehurst.wiremock.WireMockServer;
 import com.redis.testcontainers.RedisContainer;
+import org.abondar.experimental.shoppingcart.ShoppingCartApplication;
 import org.abondar.experimental.shoppingcart.exception.ErrorResponse;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.client.RestTestClient;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN;
 
 @Testcontainers(disabledWithoutDocker = true)
 @SpringBootTest(
-        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = "services.product.base-url=http://localhost:1/api"
+        classes = ShoppingCartApplication.class,
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
 )
 public class CartRestRouteTest {
 
     private static final String PRODUCT_ID = "11111111-1111-1111-1111-111111111111";
     private static final String MISSING_PRODUCT_ID = "00000000-0000-0000-0000-000000000000";
-
+    private static final WireMockServer productService = new WireMockServer(options().dynamicPort());
     @Container
-    @ServiceConnection
     static RedisContainer redis = new RedisContainer("redis:7-alpine");
-
     @LocalServerPort
     private int port;
-
-    @MockitoBean
-    private ProductClient productClient;
-
     private RestTestClient restTestClient;
 
-    @BeforeEach
-    void setUp() {
-        var productId = UUID.fromString(PRODUCT_ID);
-        when(productClient.getProduct(productId)).thenReturn(new ProductCatalogItem(
-                productId,
-                "Keyboard",
-                "/images/keyboard.png",
-                new BigDecimal("99.99")
-        ));
-        var missingProductId = UUID.fromString(MISSING_PRODUCT_ID);
-        when(productClient.getProduct(missingProductId))
-                .thenThrow(new ProductNotFoundException(missingProductId));
+    @DynamicPropertySource
+    static void redisProperties(DynamicPropertyRegistry registry) {
+        registry.add("redis.host", redis::getHost);
+        registry.add("redis.port", () -> redis.getMappedPort(6379));
+        registry.add("services.product.base-url", () -> productService.baseUrl() + "/api");
+    }
 
+    @BeforeAll
+    static void startProductService() {
+        productService.start();
+    }
+
+    @AfterAll
+    static void stopProductService() {
+        productService.stop();
+    }
+
+    @BeforeEach
+    void setUp() throws Exception {
+        redis.execInContainer("redis-cli", "FLUSHDB");
         restTestClient = RestTestClient.bindToServer()
                 .baseUrl("http://localhost:" + port + "/api")
                 .build();
+
+        productService.stubFor(
+                get(urlEqualTo("/api/v1/products/" + PRODUCT_ID))
+                        .willReturn(
+                                okJson("""
+                                        {
+                                          "id": "11111111-1111-1111-1111-111111111111",
+                                          "name": "Keyboard",
+                                          "imgUrl": "https://example.com/keyboard.jpg",
+                                          "price": 99.99
+                                        }
+                                        """)
+                                        .withHeader(ACCESS_CONTROL_ALLOW_ORIGIN, "*")));
+
+        productService.stubFor(
+                get(urlEqualTo("/api/v1/products/" + MISSING_PRODUCT_ID))
+                        .willReturn(aResponse()
+                                .withStatus(404)
+                                .withHeader(
+                                        "Content-Type",
+                                        "application/json"
+                                )));
+
     }
 
     @Test
@@ -129,6 +161,20 @@ public class CartRestRouteTest {
         assertEquals("Keyboard", response.items().getFirst().name());
         assertEquals(2, response.items().getFirst().quantity());
         assertEquals(0, response.totalPrice().compareTo(new BigDecimal("199.98")));
+    }
+
+    @Test
+    void addCartItemReturnsSingleCorsOriginHeader() {
+        var cart = createCartRequest();
+
+        restTestClient.post()
+                .uri("/v1/carts/{id}/items", cart.cartId())
+                .header("Origin", "http://localhost:8081")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(new CartItemAddRequest(PRODUCT_ID, 1))
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().valueEquals(ACCESS_CONTROL_ALLOW_ORIGIN, "http://localhost:8081");
     }
 
     @Test

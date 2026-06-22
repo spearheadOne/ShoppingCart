@@ -3,6 +3,7 @@ package org.abondar.experimental.shoppingcart.cart;
 import com.fasterxml.jackson.core.JsonParseException;
 import jakarta.validation.ConstraintViolationException;
 import org.abondar.experimental.shoppingcart.exception.ErrorResponse;
+import org.abondar.experimental.shoppingcart.product.ProductClientException;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteConfigurationBuilder;
 import org.apache.camel.component.bean.validator.BeanValidationException;
@@ -14,23 +15,24 @@ public class CartExceptionHandler extends RouteConfigurationBuilder {
     public void configuration() {
         var cartExceptionConfiguration = routeConfiguration();
 
-        cartExceptionConfiguration.onException(ProductNotFoundException.class)
+        cartExceptionConfiguration.onException(ProductClientException.class)
                 .handled(true)
-                .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(404))
-                .setHeader(Exchange.CONTENT_TYPE, constant("application/json"))
-                .setBody(exchange ->
-                        new ErrorResponse("PRODUCT_NOT_FOUND", exchange.getProperty(Exchange.EXCEPTION_CAUGHT,
-                                        Exception.class)
-                                .getMessage()));
+                .process(exchange -> {
+                    var exception = exchange.getProperty(Exchange.EXCEPTION_CAUGHT, ProductClientException.class);
 
-        cartExceptionConfiguration.onException(ProductServiceException.class)
-                .handled(true)
-                .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(503))
-                .setHeader(Exchange.CONTENT_TYPE, constant("application/json"))
-                .setBody(exchange -> new ErrorResponse(
-                        "PRODUCT_SERVICE_UNAVAILABLE",
-                        exchange.getProperty(Exchange.EXCEPTION_CAUGHT, Exception.class).getMessage()
-                ));
+                    exchange.getMessage().setHeader(
+                            Exchange.HTTP_RESPONSE_CODE,
+                            exception.getStatus()
+                    );
+
+                    exchange.getMessage().setHeader(
+                            Exchange.CONTENT_TYPE,
+                            "application/json"
+                    );
+
+                    exchange.getMessage().setBody(new ErrorResponse(exception.getCode(), exception.getMessage()));
+                });
+
 
         cartExceptionConfiguration.onException(CartNotFoundException.class)
                 .handled(true)

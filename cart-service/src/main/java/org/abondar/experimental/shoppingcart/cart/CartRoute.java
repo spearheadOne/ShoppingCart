@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 public class CartRoute extends RouteBuilder {
 
     private final CartService cartService;
+    private final CartResponseMapper cartResponseMapper;
 
     @Override
     public void configure() {
@@ -18,38 +19,64 @@ public class CartRoute extends RouteBuilder {
         from("direct:createCart")
                 .routeId("createCart")
                 .bean(cartService, "createCart()")
+                .to("direct:saveCartToRedis")
+                .bean(cartResponseMapper, "toResponse")
                 .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(201));
 
         from("direct:getCart")
                 .routeId("getCart")
-                .bean(cartService, "getCart(${header.id})");
+                .to("direct:loadCartFromRedis")
+                .bean(cartResponseMapper, "toResponse");
 
         from("direct:addCartItem")
                 .routeId("addCartItem")
                 .to("bean-validator:addCartItemRequest")
+                .setProperty("addRequest", body())
+                .setProperty(
+                        "productId",
+                        simple("${body.productId}")
+                )
+                .to("direct:loadCartFromRedis")
+                .setProperty("cart", body())
+                .to("direct:getProduct")
                 .bean(
                         cartService,
-                        "addCartItem(${header.id}, ${body})"
-                );
+                        "addCartItem("
+                                + "${exchangeProperty.cart}, "
+                                + "${exchangeProperty.addRequest}, "
+                                + "${body})"
+                )
+                .to("direct:saveCartToRedis")
+                .bean(cartResponseMapper, "toResponse");
 
         from("direct:updateCartQuantity")
                 .routeId("updateCartQuantity")
                 .to("bean-validator:updateCartItemQuantityRequest")
+                .setProperty("updateRequest", body())
+                .to("direct:loadCartFromRedis")
                 .bean(
                         cartService,
-                        "updateCartQuantity(${header.id}, ${header.productId}, ${body})"
-                );
+                        "updateCartQuantity("
+                                + "${body}, "
+                                + "${header.productId}, "
+                                + "${exchangeProperty.updateRequest})"
+                )
+                .to("direct:saveCartToRedis")
+                .bean(cartResponseMapper, "toResponse");
 
         from("direct:deleteCartItem")
                 .routeId("deleteCartItem")
+                .to("direct:loadCartFromRedis")
                 .bean(
                         cartService,
-                        "deleteCartItem(${header.id}, ${header.productId})"
-                );
+                        "deleteCartItem(${body}, ${header.productId})"
+                )
+                .to("direct:saveCartToRedis")
+                .bean(cartResponseMapper, "toResponse");
 
         from("direct:deleteCart")
                 .routeId("deleteCart")
-                .bean(cartService, "deleteCart(${header.id})")
+                .to("direct:deleteCartFromRedis")
                 .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(204))
                 .setBody(constant((Object) null));
     }

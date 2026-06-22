@@ -1,4 +1,4 @@
-package org.abondar.experimental.shoppingcart.cart;
+package org.abondar.experimental.shoppingcart.product;
 
 import java.math.BigDecimal;
 import java.util.UUID;
