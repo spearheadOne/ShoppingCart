@@ -19,6 +19,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.when;
+import static org.springframework.http.HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN;
 
 @Testcontainers(disabledWithoutDocker = true)
 @SpringBootTest(
@@ -68,6 +69,18 @@ public class CartRestRouteTest {
         assertEquals(0, cart.items().size());
         assertEquals(0, cart.itemsTotal());
         assertEquals(0, cart.totalPrice().compareTo(BigDecimal.ZERO));
+    }
+
+    @Test
+    void createCartReturnsSingleCorsOriginHeader() {
+        restTestClient.post()
+                .uri("/v1/carts")
+                .header("Origin", "http://localhost:8081")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("{}")
+                .exchange()
+                .expectStatus().isCreated()
+                .expectHeader().valueEquals(ACCESS_CONTROL_ALLOW_ORIGIN, "http://localhost:8081");
     }
 
     @Test

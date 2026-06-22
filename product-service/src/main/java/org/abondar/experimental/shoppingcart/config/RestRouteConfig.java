@@ -9,10 +9,10 @@ public class RestRouteConfig extends RouteBuilder {
 
     @Override
     public void configure() {
-
         restConfiguration()
+                .enableCORS(true)
                 .contextPath("/api")
-                .apiProperty("api.title", "Shopping Cart backend")
+                .apiProperty("api.title", "Product service")
                 .apiProperty("api.version", "v1")
                 .component("platform-http")
                 .clientRequestValidation(true)

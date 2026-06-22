@@ -1,0 +1,40 @@
+def frontendDir = file("product-ui")
+def frontendBuildOutput = layout.buildDirectory.dir("frontend")
+def npmExecutable = providers.environmentVariable("NPM_EXECUTABLE")
+        .orElse(file("/opt/homebrew/bin/npm").exists() ? "/opt/homebrew/bin/npm" : "npm")
+
+tasks.register("npmBuild", Exec) {
+    workingDir frontendDir
+    commandLine npmExecutable.get(), "run", "build"
+}
+
+tasks.register("copyFrontend", Copy) {
+    dependsOn "npmBuild"
+    into frontendBuildOutput.map { it.dir("static") }
+    from "$frontendDir/dist"
+}
+
+bootJar {
+    dependsOn "copyFrontend"
+    from(frontendBuildOutput) {
+        into "BOOT-INF/classes"
+    }
+}
+
+bootRun {
+    dependsOn "copyFrontend"
+    classpath(frontendBuildOutput)
+}
+
+dependencies {
+    implementation("org.springframework.boot:spring-boot-starter-liquibase")
+
+    implementation("org.mybatis.spring.boot:mybatis-spring-boot-starter:$mybatisVersion")
+    runtimeOnly("com.h2database:h2")
+
+    testImplementation("org.mybatis.spring.boot:mybatis-spring-boot-starter-test:$mybatisVersion")
+}
+
+bootBuildImage {
+    imageName = "abondar/product-service"
+}
