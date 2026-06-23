@@ -22,6 +22,10 @@ public class CartRestRoute extends RouteBuilder {
                 .code(201)
                 .message("Cart created")
                 .endResponseMessage()
+                .responseMessage()
+                .code(500)
+                .message("Internal server error")
+                .endResponseMessage()
                 .to("direct:createCart")
 
                 .get("/{id}")
@@ -41,6 +45,10 @@ public class CartRestRoute extends RouteBuilder {
                 .responseMessage()
                 .code(404)
                 .message("Cart not found")
+                .endResponseMessage()
+                .responseMessage()
+                .code(500)
+                .message("Internal server error")
                 .endResponseMessage()
                 .to("direct:getCart")
 
@@ -67,6 +75,10 @@ public class CartRestRoute extends RouteBuilder {
                 .responseMessage()
                 .code(404)
                 .message("Cart or product not found")
+                .endResponseMessage()
+                .responseMessage()
+                .code(500)
+                .message("Internal server error")
                 .endResponseMessage()
                 .to("direct:addCartItem")
 
@@ -99,6 +111,10 @@ public class CartRestRoute extends RouteBuilder {
                 .code(404)
                 .message("Cart or product not found")
                 .endResponseMessage()
+                .responseMessage()
+                .code(500)
+                .message("Internal server error")
+                .endResponseMessage()
                 .to("direct:updateCartQuantity")
 
                 .delete("/{id}/items/{productId}")
@@ -125,6 +141,10 @@ public class CartRestRoute extends RouteBuilder {
                 .code(404)
                 .message("Cart or product not found")
                 .endResponseMessage()
+                .responseMessage()
+                .code(500)
+                .message("Internal server error")
+                .endResponseMessage()
                 .to("direct:deleteCartItem")
 
                 .delete("/{id}")
@@ -143,6 +163,10 @@ public class CartRestRoute extends RouteBuilder {
                 .responseMessage()
                 .code(404)
                 .message("Cart not found")
+                .endResponseMessage()
+                .responseMessage()
+                .code(500)
+                .message("Internal server error")
                 .endResponseMessage()
                 .to("direct:deleteCart");
     }

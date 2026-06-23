@@ -33,6 +33,10 @@ public class ProductRestRoute extends RouteBuilder {
                 .code(404)
                 .message("Product not found")
                 .endResponseMessage()
+                .responseMessage()
+                .code(500)
+                .message("Internal server error")
+                .endResponseMessage()
                 .to("direct:getProductById")
 
                 .get()
@@ -62,6 +66,10 @@ public class ProductRestRoute extends RouteBuilder {
                 .responseMessage()
                 .code(400)
                 .message("Invalid pagination parameters")
+                .endResponseMessage()
+                .responseMessage()
+                .code(500)
+                .message("Internal server error")
                 .endResponseMessage()
                 .to("direct:getProducts");
     }
