@@ -1,7 +1,7 @@
 package org.abondar.experimental.shoppingcart.cart;
 
 import lombok.RequiredArgsConstructor;
-import org.abondar.experimental.shoppingcart.product.ProductClientResponse;
+import org.abondar.experimental.shoppingcart.api.ProductResponse;
 import org.abondar.experimental.shoppingcart.product.ProductClientException;
 import org.apache.camel.builder.RouteBuilder;
 
@@ -62,7 +62,7 @@ public class TestRoutes extends RouteBuilder {
                     }
 
                     exchange.getMessage().setBody(
-                            new ProductClientResponse(
+                            new ProductResponse(
                                     PRODUCT_ID,
                                     "Test product",
                                     "https://example.com/product.jpg",

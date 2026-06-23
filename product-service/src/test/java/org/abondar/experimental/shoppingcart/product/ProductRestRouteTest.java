@@ -1,6 +1,8 @@
 package org.abondar.experimental.shoppingcart.product;
 
 
+import org.abondar.experimental.shoppingcart.api.ProductListResponse;
+import org.abondar.experimental.shoppingcart.api.ProductResponse;
 import org.abondar.experimental.shoppingcart.exception.ErrorResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,6 +11,7 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -41,7 +44,7 @@ public class ProductRestRouteTest {
                 .expectBody(ProductResponse.class)
                 .value(response -> {
                     assertNotNull(response);
-                    assertEquals("11111111-1111-1111-1111-111111111111", response.id());
+                    assertEquals(UUID.fromString("11111111-1111-1111-1111-111111111111"), response.id());
                     assertEquals("Keyboard", response.name());
                     assertEquals("/images/keyboard.png", response.imgUrl());
                     assertEquals(0, response.price().compareTo(new BigDecimal("99.99")));

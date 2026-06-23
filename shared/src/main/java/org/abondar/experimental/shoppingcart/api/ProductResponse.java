@@ -1,9 +1,10 @@
-package org.abondar.experimental.shoppingcart.product;
+package org.abondar.experimental.shoppingcart.api;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 public record ProductResponse(
-        String id,
+        UUID id,
         String name,
         String imgUrl,
         BigDecimal price

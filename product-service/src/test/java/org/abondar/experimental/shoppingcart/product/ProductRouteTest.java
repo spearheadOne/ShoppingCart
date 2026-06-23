@@ -1,5 +1,7 @@
 package org.abondar.experimental.shoppingcart.product;
 
+import org.abondar.experimental.shoppingcart.api.ProductListResponse;
+import org.abondar.experimental.shoppingcart.api.ProductResponse;
 import org.apache.camel.CamelContext;
 import org.apache.camel.CamelExecutionException;
 import org.apache.camel.ProducerTemplate;
@@ -101,7 +103,7 @@ public class ProductRouteTest {
         var result = producerTemplate.requestBodyAndHeader("direct:getProductById", null, "id",
                 PRODUCT_ID.toString(), ProductResponse.class);
 
-        assertEquals(PRODUCT_ID.toString(), result.id());
+        assertEquals(PRODUCT_ID, result.id());
         assertEquals(product.name(), result.name());
         assertEquals(product.imgUrl(), result.imgUrl());
         assertEquals(product.price(), result.price());
@@ -152,7 +154,7 @@ public class ProductRouteTest {
         assertEquals(limit, result.limit());
         assertEquals(offset, result.offset());
         assertEquals(3, result.total());
-        assertEquals(PRODUCT_ID.toString(), result.products().getFirst().id());
+        assertEquals(PRODUCT_ID, result.products().getFirst().id());
     }
 
     @Test

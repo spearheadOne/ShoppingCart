@@ -1,5 +1,7 @@
 package org.abondar.experimental.shoppingcart.product;
 
+import org.abondar.experimental.shoppingcart.api.ProductListResponse;
+import org.abondar.experimental.shoppingcart.api.ProductResponse;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -17,7 +19,7 @@ public class ProductResponseMapper {
 
     public ProductResponse toResponse(Product product) {
         return new ProductResponse(
-                product.id().toString(),
+                product.id(),
                 product.name(),
                 product.imgUrl(),
                 product.price()

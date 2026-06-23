@@ -1,6 +1,7 @@
 package org.abondar.experimental.shoppingcart.product;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
+import org.abondar.experimental.shoppingcart.api.ProductResponse;
 import org.abondar.experimental.shoppingcart.cart.CartExceptionHandler;
 import org.abondar.experimental.shoppingcart.exception.ErrorResponse;
 import org.apache.camel.Exchange;
@@ -85,9 +86,9 @@ public class ProductClientRouteTest {
 
         var exchange = producerTemplate.request("direct:getProduct",
                 e -> e.setProperty("productId", PRODUCT_ID));
-        assertInstanceOf(ProductClientResponse.class, exchange.getMessage().getBody());
+        assertInstanceOf(ProductResponse.class, exchange.getMessage().getBody());
 
-        var product = exchange.getMessage().getBody(ProductClientResponse.class);
+        var product = exchange.getMessage().getBody(ProductResponse.class);
 
         assertEquals(PRODUCT_ID, product.id().toString());
         assertEquals("Test product", product.name());

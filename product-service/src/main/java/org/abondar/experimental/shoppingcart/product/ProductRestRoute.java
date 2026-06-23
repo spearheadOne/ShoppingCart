@@ -1,5 +1,7 @@
 package org.abondar.experimental.shoppingcart.product;
 
+import org.abondar.experimental.shoppingcart.api.ProductListResponse;
+import org.abondar.experimental.shoppingcart.api.ProductResponse;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.rest.RestParamType;
 import org.springframework.stereotype.Component;

@@ -1,5 +1,6 @@
 package org.abondar.experimental.shoppingcart.product;
 
+import org.abondar.experimental.shoppingcart.api.ProductResponse;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.dataformat.JsonLibrary;
@@ -35,6 +36,6 @@ public class ProductClientRoute extends RouteBuilder {
                 .throwException(new ProductClientException(502, "PRODUCT_SERVICE_ERROR",
                         "Product service rejected the request"))
                 .end()
-                .unmarshal().json(JsonLibrary.Jackson, ProductClientResponse.class);
+                .unmarshal().json(JsonLibrary.Jackson, ProductResponse.class);
     }
 }

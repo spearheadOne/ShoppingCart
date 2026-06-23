@@ -1,4 +1,4 @@
-package org.abondar.experimental.shoppingcart.product;
+package org.abondar.experimental.shoppingcart.api;
 
 import java.util.List;
 

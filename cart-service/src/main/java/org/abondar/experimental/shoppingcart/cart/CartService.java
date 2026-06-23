@@ -1,6 +1,6 @@
 package org.abondar.experimental.shoppingcart.cart;
 
-import org.abondar.experimental.shoppingcart.product.ProductClientResponse;
+import org.abondar.experimental.shoppingcart.api.ProductResponse;
 import org.abondar.experimental.shoppingcart.util.UuidUtil;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +18,7 @@ public class CartService {
     }
 
 
-    public Cart addCartItem(Cart cart, CartItemAddRequest request, ProductClientResponse productItem) {
+    public Cart addCartItem(Cart cart, CartItemAddRequest request, ProductResponse productItem) {
         var productId = UuidUtil.parseUuid(request.productId());
         var items = copyItems(cart);
 
@@ -73,7 +73,7 @@ public class CartService {
         return new ArrayList<>(cart.items());
     }
 
-    private CartItem toCartItem(ProductClientResponse product, int quantity) {
+    private CartItem toCartItem(ProductResponse product, int quantity) {
         return new CartItem(
                 product.id(),
                 product.name(),
