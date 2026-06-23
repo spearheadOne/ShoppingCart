@@ -1,5 +1,6 @@
 package org.abondar.experimental.shoppingcart.cart;
 
+import org.abondar.experimental.shoppingcart.api.OrderResponse;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.rest.RestDefinition;
 import org.apache.camel.model.rest.RestParamType;
@@ -80,6 +81,10 @@ public class CartRestRoute extends RouteBuilder {
                 .code(500)
                 .message("Internal server error")
                 .endResponseMessage()
+                .responseMessage()
+                .code(502)
+                .message("Product service error")
+                .endResponseMessage()
                 .to("direct:addCartItem")
 
                 .patch("/{id}/items/{productId}")
@@ -115,7 +120,44 @@ public class CartRestRoute extends RouteBuilder {
                 .code(500)
                 .message("Internal server error")
                 .endResponseMessage()
+                .responseMessage()
+                .code(502)
+                .message("Product service error")
+                .endResponseMessage()
                 .to("direct:updateCartQuantity")
+
+
+                .post("/{id}/submit")
+                .description("Submit cart and create an order")
+                .apiDocs(true)
+                .outType(OrderResponse.class)
+                .param()
+                .name("id")
+                .type(RestParamType.path)
+                .description("Cart identifier")
+                .required(true)
+                .endParam()
+                .responseMessage()
+                .code(201)
+                .message("Order created")
+                .endResponseMessage()
+                .responseMessage()
+                .code(400)
+                .message("Cart cannot be submitted")
+                .endResponseMessage()
+                .responseMessage()
+                .code(404)
+                .message("Cart or product not found")
+                .endResponseMessage()
+                .responseMessage()
+                .code(500)
+                .message("Internal server error")
+                .endResponseMessage()
+                .responseMessage()
+                .code(502)
+                .message("Product service error")
+                .endResponseMessage()
+                .to("direct:submitCart")
 
                 .delete("/{id}/items/{productId}")
                 .description("Remove product from cart")

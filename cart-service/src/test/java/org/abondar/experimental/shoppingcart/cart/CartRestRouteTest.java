@@ -3,6 +3,7 @@ package org.abondar.experimental.shoppingcart.cart;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.redis.testcontainers.RedisContainer;
 import org.abondar.experimental.shoppingcart.ShoppingCartApplication;
+import org.abondar.experimental.shoppingcart.api.OrderResponse;
 import org.abondar.experimental.shoppingcart.exception.ErrorResponse;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -22,7 +23,11 @@ import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -65,6 +70,7 @@ public class CartRestRouteTest {
     @BeforeEach
     void setUp() throws Exception {
         redis.execInContainer("redis-cli", "FLUSHDB");
+        productService.resetAll();
         restTestClient = RestTestClient.bindToServer()
                 .baseUrl("http://localhost:" + port + "/api")
                 .build();
@@ -243,6 +249,118 @@ public class CartRestRouteTest {
                     assertEquals(4, response.items().getFirst().quantity());
                     assertEquals(0, response.totalPrice().compareTo(new BigDecimal("399.96")));
                 });
+    }
+
+    @Test
+    void submitCart() {
+        var cart = createCartRequest();
+        addItem(cart.cartId(), PRODUCT_ID, 2);
+
+        productService.stubFor(post(urlEqualTo("/api/v1/orders"))
+                .withRequestBody(matchingJsonPath("$.cartId", equalTo(cart.cartId())))
+                .withRequestBody(matchingJsonPath("$.items[0].productId", equalTo(PRODUCT_ID)))
+                .withRequestBody(matchingJsonPath("$.items[0].quantity", equalTo("2")))
+                .willReturn(okJson("""
+                        {
+                          "orderId": "33333333-3333-3333-3333-333333333333",
+                          "cartId": "%s",
+                          "status": "CREATED",
+                          "items": [
+                            {
+                              "productId": "11111111-1111-1111-1111-111111111111",
+                              "name": "Keyboard",
+                              "imgUrl": "https://example.com/keyboard.jpg",
+                              "unitPrice": 99.99,
+                              "quantity": 2,
+                              "lineTotal": 199.98
+                            }
+                          ],
+                          "itemsTotal": 2,
+                          "totalPrice": 199.98,
+                          "createdAt": "2026-06-23T12:00:00Z"
+                        }
+                        """.formatted(cart.cartId()))));
+
+        restTestClient.post()
+                .uri("/v1/carts/{id}/submit", cart.cartId())
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody(OrderResponse.class)
+                .value(response -> {
+                    assertNotNull(response);
+                    assertEquals("33333333-3333-3333-3333-333333333333", response.orderId());
+                    assertEquals(cart.cartId(), response.cartId());
+                    assertEquals("CREATED", response.status());
+                    assertEquals(1, response.items().size());
+                    assertEquals(2, response.itemsTotal());
+                    assertEquals(0, new BigDecimal("199.98").compareTo(response.totalPrice()));
+                });
+
+        productService.verify(postRequestedFor(urlEqualTo("/api/v1/orders")));
+
+        restTestClient.get()
+                .uri("/v1/carts/{id}", cart.cartId())
+                .exchange()
+                .expectStatus().isNotFound();
+    }
+
+    @Test
+    void submitEmptyCartRejectsRequestAndKeepsCart() {
+        var cart = createCartRequest();
+
+        restTestClient.post()
+                .uri("/v1/carts/{id}/submit", cart.cartId())
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody(ErrorResponse.class)
+                .value(response -> {
+                    assertNotNull(response);
+                    assertEquals("VALIDATION_ERROR", response.code());
+                });
+
+        productService.verify(0, postRequestedFor(urlEqualTo("/api/v1/orders")));
+
+        restTestClient.get()
+                .uri("/v1/carts/{id}", cart.cartId())
+                .exchange()
+                .expectStatus().isOk();
+    }
+
+    @Test
+    void submitCartNotFound() {
+        restTestClient.post()
+                .uri("/v1/carts/{id}/submit", UUID.randomUUID())
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody(ErrorResponse.class)
+                .value(response -> {
+                    assertNotNull(response);
+                    assertEquals("CART_NOT_FOUND", response.code());
+                });
+    }
+
+    @Test
+    void submitCartKeepsCartWhenOrderServiceUnavailable() {
+        var cart = createCartRequest();
+        addItem(cart.cartId(), PRODUCT_ID, 1);
+
+        productService.stubFor(post(urlEqualTo("/api/v1/orders"))
+                .willReturn(aResponse().withStatus(500)));
+
+        restTestClient.post()
+                .uri("/v1/carts/{id}/submit", cart.cartId())
+                .exchange()
+                .expectStatus().isEqualTo(502)
+                .expectBody(ErrorResponse.class)
+                .value(response -> {
+                    assertNotNull(response);
+                    assertEquals("PRODUCT_SERVICE_UNAVAILABLE", response.code());
+                });
+
+        restTestClient.get()
+                .uri("/v1/carts/{id}", cart.cartId())
+                .exchange()
+                .expectStatus().isOk();
     }
 
     @Test

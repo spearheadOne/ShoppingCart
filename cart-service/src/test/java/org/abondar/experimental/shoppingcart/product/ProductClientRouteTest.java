@@ -1,6 +1,9 @@
 package org.abondar.experimental.shoppingcart.product;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
+import org.abondar.experimental.shoppingcart.api.CreateOrderItemRequest;
+import org.abondar.experimental.shoppingcart.api.CreateOrderRequest;
+import org.abondar.experimental.shoppingcart.api.OrderResponse;
 import org.abondar.experimental.shoppingcart.api.ProductResponse;
 import org.abondar.experimental.shoppingcart.cart.CartExceptionHandler;
 import org.abondar.experimental.shoppingcart.exception.ErrorResponse;
@@ -22,10 +25,15 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.containing;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -141,10 +149,126 @@ public class ProductClientRouteTest {
 
         var exchange = producerTemplate.request("direct:getProduct",
                 e -> e.setProperty("productId", PRODUCT_ID));
-        assertEquals(502,  exchange.getMessage().getHeader(Exchange.HTTP_RESPONSE_CODE, Integer.class));
+        assertEquals(502, exchange.getMessage().getHeader(Exchange.HTTP_RESPONSE_CODE, Integer.class));
 
 
         var error = exchange.getMessage().getBody(ErrorResponse.class);
+        assertNotNull(error);
+        assertEquals("PRODUCT_SERVICE_ERROR", error.code());
+        assertEquals("Product service rejected the request", error.message());
+    }
+
+    @Test
+    public void createOrder() {
+        var request = new CreateOrderRequest(
+                "22222222-2222-2222-2222-222222222222",
+                List.of(new CreateOrderItemRequest(PRODUCT_ID, 2))
+        );
+
+        productService.stubFor(post(urlEqualTo("/api/v1/orders"))
+                .withHeader("Content-Type", containing("application/json"))
+                .withRequestBody(matchingJsonPath("$.cartId",
+                        equalTo("22222222-2222-2222-2222-222222222222")))
+                .withRequestBody(matchingJsonPath("$.items[0].productId", equalTo(PRODUCT_ID)))
+                .withRequestBody(matchingJsonPath("$.items[0].quantity", equalTo("2")))
+                .willReturn(okJson("""
+                        {
+                          "orderId": "33333333-3333-3333-3333-333333333333",
+                          "cartId": "22222222-2222-2222-2222-222222222222",
+                          "status": "CREATED",
+                          "totalPrice": 20.00,
+                          "createdAt": "2026-06-23T12:00:00Z",
+                          "itemsTotal": 2,
+                          "items": [
+                            {
+                              "productId": "11111111-1111-1111-1111-111111111111",
+                              "name": "Test product",
+                              "imgUrl": "https://example.com/product.jpg",
+                              "unitPrice": 10.00,
+                              "quantity": 2,
+                              "lineTotal": 20.00
+                            }
+                          ]
+                        }
+                        """))
+        );
+
+        var exchange = producerTemplate.request("direct:createOrder",
+                e->e.getMessage().setBody(request));
+
+        var response = exchange.getMessage().getBody(OrderResponse.class);
+
+        assertNotNull(response);
+        assertEquals("33333333-3333-3333-3333-333333333333", response.orderId());
+        assertEquals("22222222-2222-2222-2222-222222222222", response.cartId());
+        assertEquals("CREATED", response.status());
+        assertEquals(0, response.totalPrice().compareTo(new BigDecimal("20.00")));
+        assertEquals(1, response.items().size());
+        assertEquals(2, response.itemsTotal());
+    }
+
+    @Test
+    public void createOrderNotFound() {
+        var request = new CreateOrderRequest(
+                "22222222-2222-2222-2222-222222222222",
+                List.of(new CreateOrderItemRequest(PRODUCT_ID, 2))
+        );
+
+        productService.stubFor(post(urlEqualTo("/api/v1/orders"))
+                .willReturn(aResponse().withStatus(404)));
+
+        var exchange = producerTemplate.request("direct:createOrder",
+                e->e.getMessage().setBody(request));
+
+        assertEquals(404, exchange.getMessage().getHeader(Exchange.HTTP_RESPONSE_CODE, Integer.class));
+
+        var error = exchange.getMessage().getBody(ErrorResponse.class);
+
+        assertNotNull(error);
+        assertEquals("PRODUCT_NOT_FOUND", error.code());
+        assertEquals("Product referenced by cart was not found", error.message());
+    }
+
+
+    @Test
+    public void createOrderServiceUnavailable() {
+        var request = new CreateOrderRequest(
+                "22222222-2222-2222-2222-222222222222",
+                List.of(new CreateOrderItemRequest(PRODUCT_ID, 2))
+        );
+
+        productService.stubFor(post(urlEqualTo("/api/v1/orders"))
+                .willReturn(aResponse().withStatus(500)));
+
+        var exchange = producerTemplate.request("direct:createOrder",
+                e->e.getMessage().setBody(request));
+
+        assertEquals(502, exchange.getMessage().getHeader(Exchange.HTTP_RESPONSE_CODE, Integer.class));
+
+        var error = exchange.getMessage().getBody(ErrorResponse.class);
+
+        assertNotNull(error);
+        assertEquals("PRODUCT_SERVICE_UNAVAILABLE", error.code());
+        assertEquals("Product service is unavailable", error.message());
+    }
+
+    @Test
+    public void createOrderBadRequest() {
+        var request = new CreateOrderRequest(
+                "22222222-2222-2222-2222-222222222222",
+                List.of(new CreateOrderItemRequest(PRODUCT_ID, 2))
+        );
+
+        productService.stubFor(post(urlEqualTo("/api/v1/orders"))
+                .willReturn(aResponse().withStatus(400)));
+
+        var exchange = producerTemplate.request("direct:createOrder",
+                e->e.getMessage().setBody(request));
+
+        assertEquals(502, exchange.getMessage().getHeader(Exchange.HTTP_RESPONSE_CODE, Integer.class));
+
+        var error = exchange.getMessage().getBody(ErrorResponse.class);
+
         assertNotNull(error);
         assertEquals("PRODUCT_SERVICE_ERROR", error.code());
         assertEquals("Product service rejected the request", error.message());

@@ -69,5 +69,9 @@ public class TestRoutes extends RouteBuilder {
                                     new BigDecimal("10.00")
                             ));
                 });
+
+        from("direct:createOrder")
+                .routeId("testCreateOrder")
+                .to("mock:createOrder");
     }
 }

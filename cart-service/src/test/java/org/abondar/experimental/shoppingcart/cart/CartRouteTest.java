@@ -1,9 +1,15 @@
 package org.abondar.experimental.shoppingcart.cart;
 
+import org.abondar.experimental.shoppingcart.api.CreateOrderRequest;
+import org.abondar.experimental.shoppingcart.api.OrderItemResponse;
+import org.abondar.experimental.shoppingcart.api.OrderResponse;
+import org.abondar.experimental.shoppingcart.product.ProductClientException;
 import org.apache.camel.CamelExecutionException;
+import org.apache.camel.EndpointInject;
 import org.apache.camel.Exchange;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.component.bean.validator.BeanValidationException;
+import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.spring.boot.CamelAutoConfiguration;
 import org.apache.camel.test.spring.junit5.CamelSpringBootTest;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +25,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -40,10 +47,15 @@ public class CartRouteTest {
 
     private static final UUID CART_ID = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
     private static final UUID PRODUCT_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
+
+
     @Autowired
     private ProducerTemplate producerTemplate;
     @Autowired
     private TestCartStore cartStore;
+
+    @EndpointInject("mock:createOrder")
+    private MockEndpoint createOrder;
 
     private static Stream<CartItemAddRequest> invalidAddRequests() {
         return Stream.of(
@@ -58,6 +70,7 @@ public class CartRouteTest {
     @BeforeEach
     public void clearStore() {
         cartStore.clear();
+        createOrder.reset();
     }
 
 
@@ -134,10 +147,10 @@ public class CartRouteTest {
 
         var response = exchange.getMessage().getBody(CartResponse.class);
 
-       assertNotNull(response);
-       assertEquals(1, response.items().size());
-       assertEquals(2, response.items().getFirst().quantity());
-       assertEquals(2, cartStore.getCart().items().getFirst().quantity());
+        assertNotNull(response);
+        assertEquals(1, response.items().size());
+        assertEquals(2, response.items().getFirst().quantity());
+        assertEquals(2, cartStore.getCart().items().getFirst().quantity());
     }
 
     @ParameterizedTest
@@ -174,13 +187,13 @@ public class CartRouteTest {
                 }
         );
 
-       var response = exchange.getMessage().getBody(CartResponse.class);
+        var response = exchange.getMessage().getBody(CartResponse.class);
 
-       assertNotNull(response);
-       assertEquals(1, response.items().size());
-       assertEquals(productId1.toString(), response.items().getFirst().productId());
-       assertEquals(1,cartStore.getCart().items().size());
-       assertEquals(productId1,cartStore.getCart().items().getFirst().productId());
+        assertNotNull(response);
+        assertEquals(1, response.items().size());
+        assertEquals(productId1.toString(), response.items().getFirst().productId());
+        assertEquals(1, cartStore.getCart().items().size());
+        assertEquals(productId1, cartStore.getCart().items().getFirst().productId());
     }
 
     @Test
@@ -196,6 +209,84 @@ public class CartRouteTest {
         assertNull(cartStore.getCart());
     }
 
+
+    @Test
+    public void submitCart() throws Exception {
+        var cart = new Cart(CART_ID, List.of(cartItem(2)));
+        cartStore.setCart(cart);
+
+        var orderItemResponse = new OrderItemResponse(PRODUCT_ID.toString(), "test", "test",
+                new BigDecimal("10.00"), 2, new BigDecimal("20.00"));
+
+        var orderResponse = new OrderResponse("33333333-3333-3333-3333-333333333333", CART_ID.toString(),
+                "CREATED", List.of(orderItemResponse), 1, new BigDecimal("20.00"), Instant.now());
+
+        createOrder.expectedMessageCount(1);
+        createOrder.expectedMessagesMatches(exchange -> {
+            var request = exchange.getMessage().getBody(CreateOrderRequest.class);
+
+            return request != null
+                    && CART_ID.toString().equals(request.cartId())
+                    && request.items().size() == 1
+                    && PRODUCT_ID.toString().equals(request.items().getFirst().productId())
+                    && request.items().getFirst().quantity() == 2;
+        });
+        createOrder.whenAnyExchangeReceived(exchange -> exchange.getIn().setBody(orderResponse));
+
+        var exchange = producerTemplate.request("direct:submitCart",
+                current -> current.getMessage().setHeader("id", CART_ID)
+        );
+
+        var response = exchange.getMessage().getBody(OrderResponse.class);
+
+        assertNotNull(response);
+        assertEquals(201, exchange.getMessage().getHeader(Exchange.HTTP_RESPONSE_CODE, Integer.class));
+        assertEquals("33333333-3333-3333-3333-333333333333", response.orderId());
+        assertEquals("CREATED", response.status());
+        assertEquals(1, response.itemsTotal());
+        assertEquals(1, response.items().size());
+        assertEquals(PRODUCT_ID.toString(), response.items().getFirst().productId());
+        assertEquals(2, response.items().getFirst().quantity());
+        assertEquals(0, new BigDecimal("20.00").compareTo(response.totalPrice()));
+
+        assertNull(cartStore.getCart());
+    }
+
+    @Test
+    public void submitCartDoNotDelete() {
+        var cart = new Cart(CART_ID, List.of(cartItem(2)));
+        cartStore.setCart(cart);
+
+        createOrder.whenAnyExchangeReceived(exchange -> {
+            throw new ProductClientException(502, "PRODUCT_SERVICE_UNAVAILABLE", "Product service is unavailable");
+        });
+
+        var exception = assertThrows(CamelExecutionException.class, () ->
+                producerTemplate.requestBodyAndHeader("direct:submitCart", null,
+                        "id", CART_ID, OrderResponse.class));
+
+
+        assertInstanceOf(ProductClientException.class, exception.getCause());
+
+        assertNotNull(cartStore.getCart());
+        assertEquals(1, cartStore.getCart().items().size());
+    }
+
+    @Test
+
+    public void submitCartInvalid() {
+        cartStore.setCart(new Cart(CART_ID, List.of()));
+
+        var exception = assertThrows(CamelExecutionException.class, () -> producerTemplate.requestBodyAndHeader(
+                "direct:submitCart", null, "id", CART_ID));
+
+        assertInstanceOf(BeanValidationException.class, exception.getCause());
+        assertNotNull(cartStore.getCart());
+        assertEquals(0, createOrder.getReceivedCounter());
+
+    }
+
+
     private CartItem cartItem(int quantity) {
         return new CartItem(PRODUCT_ID, "test", "test", new BigDecimal("10.00"), quantity);
     }
@@ -205,7 +296,7 @@ public class CartRouteTest {
     @Import({
             CartRoute.class,
             CartService.class,
-            CartResponseMapper.class,
+            CartDtoMapper.class,
             TestCartStore.class,
             TestRoutes.class
     })

@@ -1,11 +1,13 @@
 package org.abondar.experimental.shoppingcart.cart;
 
+import org.abondar.experimental.shoppingcart.api.CreateOrderItemRequest;
+import org.abondar.experimental.shoppingcart.api.CreateOrderRequest;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 
 @Component
-public class CartResponseMapper {
+public class CartDtoMapper {
 
     public CartResponse toResponse(Cart cart) {
         var items = cart.items().stream()
@@ -32,5 +34,16 @@ public class CartResponseMapper {
                 item.quantity(),
                 item.lineTotal()
         );
+    }
+
+    public CreateOrderRequest toRequest(Cart cart) {
+        var items = cart.items().stream()
+                .map(item -> new CreateOrderItemRequest(
+                        item.productId().toString(),
+                        item.quantity()
+                ))
+                .toList();
+
+        return new CreateOrderRequest(cart.id().toString(), items);
     }
 }
