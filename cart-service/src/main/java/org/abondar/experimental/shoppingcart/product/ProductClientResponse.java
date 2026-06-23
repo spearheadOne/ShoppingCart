@@ -3,7 +3,7 @@ package org.abondar.experimental.shoppingcart.product;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-public record ProductCatalogItem(
+public record ProductClientResponse(
         UUID id,
         String name,
         String imgUrl,

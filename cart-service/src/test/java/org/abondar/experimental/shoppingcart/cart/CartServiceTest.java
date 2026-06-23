@@ -1,6 +1,6 @@
 package org.abondar.experimental.shoppingcart.cart;
 
-import org.abondar.experimental.shoppingcart.product.ProductCatalogItem;
+import org.abondar.experimental.shoppingcart.product.ProductClientResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -92,7 +92,7 @@ public class CartServiceTest {
                 "test", "test", new BigDecimal("10.00"), 2);
     }
 
-    private ProductCatalogItem product() {
-        return new ProductCatalogItem(PRODUCT_ID, "test", "test", new BigDecimal("10.00"));
+    private ProductClientResponse product() {
+        return new ProductClientResponse(PRODUCT_ID, "test", "test", new BigDecimal("10.00"));
     }
 }

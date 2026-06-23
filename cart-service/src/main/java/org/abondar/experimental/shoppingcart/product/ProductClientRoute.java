@@ -35,6 +35,6 @@ public class ProductClientRoute extends RouteBuilder {
                 .throwException(new ProductClientException(502, "PRODUCT_SERVICE_ERROR",
                         "Product service rejected the request"))
                 .end()
-                .unmarshal().json(JsonLibrary.Jackson, ProductCatalogItem.class);
+                .unmarshal().json(JsonLibrary.Jackson, ProductClientResponse.class);
     }
 }

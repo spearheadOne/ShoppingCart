@@ -85,9 +85,9 @@ public class ProductClientRouteTest {
 
         var exchange = producerTemplate.request("direct:getProduct",
                 e -> e.setProperty("productId", PRODUCT_ID));
-        assertInstanceOf(ProductCatalogItem.class, exchange.getMessage().getBody());
+        assertInstanceOf(ProductClientResponse.class, exchange.getMessage().getBody());
 
-        var product = exchange.getMessage().getBody(ProductCatalogItem.class);
+        var product = exchange.getMessage().getBody(ProductClientResponse.class);
 
         assertEquals(PRODUCT_ID, product.id().toString());
         assertEquals("Test product", product.name());
