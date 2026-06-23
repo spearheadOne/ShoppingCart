@@ -1,7 +1,6 @@
 package org.abondar.experimental.shoppingcart.cart;
 
 import org.abondar.experimental.shoppingcart.api.ProductResponse;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -21,12 +20,8 @@ public class CartServiceTest {
     private static final UUID SECOND_PRODUCT_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
 
 
-    private CartService cartService;
+    private final CartService cartService = new CartService();
 
-    @BeforeEach
-    public void setUp() {
-        cartService = new CartService();
-    }
 
     @Test
     public void createCart() {

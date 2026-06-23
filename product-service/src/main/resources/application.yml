@@ -25,6 +25,7 @@ camel:
       sql-session-factory: sqlSessionFactory
 
 mybatis:
+  type-handlers-package: org.abondar.experimental.shoppingcart.type_handler
   configuration:
     map-underscore-to-camel-case: true
 
