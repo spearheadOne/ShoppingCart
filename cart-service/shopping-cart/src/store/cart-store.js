@@ -55,6 +55,7 @@ const cartStore = create((set, get) => ({
     cartLoading: true,
     pendingItems: {},
     deletingCart: false,
+    submittingCart: false,
 
     showNotification: (notification) => {
         set({
@@ -189,6 +190,34 @@ const cartStore = create((set, get) => ({
             });
         } finally {
             set({ deletingCart: false });
+        }
+    },
+
+    submitCart: async () => {
+        const cartId = get().cart.id;
+        if (!cartId || get().cart.items.length === 0) return;
+
+        set({ submittingCart: true });
+        try {
+            const orderData = await apiRequest(`/carts/${cartId}/submit`, {
+                method: "POST"
+            });
+            localStorage.removeItem(CART_ID_KEY);
+            set({ cart: emptyCart });
+            window.parent.postMessage({ type: "shopping-cart:cleared" }, "*");
+            get().showNotification({
+                message: orderData?.orderId
+                    ? `Order ${orderData.orderId} created.`
+                    : "Order created.",
+                type: "success"
+            });
+        } catch (error) {
+            get().showNotification({
+                message: "Could not submit the cart.",
+                type: "error"
+            });
+        } finally {
+            set({ submittingCart: false });
         }
     }
 }));

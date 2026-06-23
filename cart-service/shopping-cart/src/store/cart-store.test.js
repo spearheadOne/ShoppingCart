@@ -51,7 +51,8 @@ const resetStore = () => {
         notification: null,
         cartLoading: false,
         pendingItems: {},
-        deletingCart: false
+        deletingCart: false,
+        submittingCart: false
     });
 };
 
@@ -157,6 +158,43 @@ describe("cart store API integration", () => {
         expect(localStorage.getItem("shopping-cart-id")).toBeNull();
         expect(cartStore.getState().notification).toEqual({
             message: "Cart deleted.",
+            type: "success"
+        });
+        expect(postMessage).toHaveBeenCalledWith(
+            { type: "shopping-cart:cleared" },
+            "*"
+        );
+        postMessage.mockRestore();
+    });
+
+    it("submits the active cart and clears its persisted id", async () => {
+        const postMessage = vi.spyOn(window.parent, "postMessage");
+        cartStore.getState().replaceCartData(cartWithKeyboard());
+        requestMock.mockResolvedValueOnce(apiResponse({
+            orderId: "order-1",
+            cartId: "cart-1",
+            status: "CREATED",
+            items: [],
+            itemsTotal: 0,
+            totalPrice: 0,
+            createdAt: "2026-06-23T12:00:00Z"
+        }, 201));
+
+        await cartStore.getState().submitCart();
+
+        expect(requestMock).toHaveBeenCalledWith({
+            url: "/carts/cart-1/submit",
+            method: "POST"
+        });
+        expect(cartStore.getState().cart).toEqual({
+            id: null,
+            items: [],
+            itemsTotal: 0,
+            totalPrice: 0
+        });
+        expect(localStorage.getItem("shopping-cart-id")).toBeNull();
+        expect(cartStore.getState().notification).toEqual({
+            message: "Order order-1 created.",
             type: "success"
         });
         expect(postMessage).toHaveBeenCalledWith(
