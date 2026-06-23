@@ -22,6 +22,21 @@ ShoppingCart/
 
 The cart service retrieves product details through the product service HTTP API. The combined UI
 only embeds and coordinates the two UIs; it is not packaged into or served by either backend.
+The product service is a demo service only: it uses an in-memory H2 database with seeded data and
+implements basic product listing/detail endpoints for the cart workflow.
+
+## Tech stack
+
+- Spring Boot
+- Apache Camel
+- Redis
+- H2
+- React
+- Vite
+- Axios
+- Express
+- Docker
+- Gradle
 
 ## Install frontend dependencies
 
@@ -87,19 +102,19 @@ Configuration:
 
 ```shell
 ./gradlew :cart-service:bootBuildImage :product-service:bootBuildImage
-docker build -t abondar/shopping-cart-combined-ui combined-ui
+docker build -t abondar/shopping-cart-ui combined-ui
 ```
 
 This creates:
 
 - `abondar/shopping-cart`
 - `abondar/product-service`
-- `abondar/shopping-cart-combined-ui`
+- `abondar/shopping-cart-ui`
 
 Run the combined UI container:
 
 ```shell
-docker run --rm -p 3000:3000 \
+docker run -p 3000:3000 \
   -e CART_UI_URL=http://localhost:8080 \
   -e PRODUCT_UI_URL=http://localhost:8081 \
   abondar/shopping-cart-combined-ui
